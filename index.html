@@ -653,7 +653,8 @@
     <div class="srs-dashboard">
       <div class="srs-stat">
         <span class="srs-stat-num srs-due" id="srsDueCount">0</span>
-        <span class="srs-stat-label">Due today</span>
+        <span class="srs-stat-label" id="srsDueLabel">Due today</span>
+        <span style="font-size:0.6rem;color:var(--mist);display:block;margin-top:0.25rem;letter-spacing:0.04em" id="srsDueExtra"></span>
       </div>
       <div class="srs-stat">
         <span class="srs-stat-num srs-streak" id="srsStreak">0</span>
@@ -1508,6 +1509,7 @@ let srsCategory = 'All'; // category filter for review
 // ============================================================
 
 const DAILY_NEW_LIMIT = 50;
+const DAILY_REVIEW_CAP = 50; // max cards shown per session before "Continue" prompt
 // Learning steps in days (fractional ok): 0 = same day
 const LEARN_STEPS = [1, 6]; // first review after 1 day, then 6 days = Anki default
 
@@ -1610,7 +1612,7 @@ function getNewSeenTodayCount() {
   return Object.values(srs).filter(c => c.newSeenDate === today).length;
 }
 
-function getDueItems(unlimited = false, category = 'All') {
+function getDuePool(category = 'All') {
   const today = todayStr();
   let all = Object.values(db.categories).flat();
   if (category !== 'All') {
@@ -1637,13 +1639,27 @@ function getDueItems(unlimited = false, category = 'All') {
     }
   });
 
-  if (unlimited) {
-    return [...reviews, ...newCards];
-  }
-
   const newAllowed = Math.max(0, DAILY_NEW_LIMIT - newSeenToday);
   const limitedNew = newCards.slice(0, newAllowed);
-  return [...reviews, ...limitedNew];
+  return { reviews, newCards, limitedNew };
+}
+
+function getDueItems(unlimited = false, category = 'All') {
+  const pool = getDuePool(category);
+  if (unlimited) {
+    return [...pool.reviews, ...pool.newCards];
+  }
+  // Cap at DAILY_REVIEW_CAP, prioritizing reviews over new cards
+  return [...pool.reviews, ...pool.limitedNew].slice(0, DAILY_REVIEW_CAP);
+}
+
+function getTotalDueCount(category = 'All') {
+  const pool = getDuePool(category);
+  return pool.reviews.length + pool.limitedNew.length;
+}
+
+function getReviewsBeyondCapCount(category = 'All') {
+  return Math.max(0, getTotalDueCount(category) - DAILY_REVIEW_CAP);
 }
 
 function getMasteredCount() {
@@ -1733,8 +1749,20 @@ function selectReviewCategory(cat) {
 }
 
 function renderSRSStats() {
-  const due = getDueItems(false, srsCategory).length;
-  document.getElementById('srsDueCount').textContent = due;
+  const sessionDue = getDueItems(false, srsCategory).length;
+  const totalDue = getTotalDueCount(srsCategory);
+  document.getElementById('srsDueCount').textContent = sessionDue;
+  const labelEl = document.getElementById('srsDueLabel');
+  const extraEl = document.getElementById('srsDueExtra');
+  if (labelEl && extraEl) {
+    if (totalDue > sessionDue) {
+      labelEl.textContent = "Today's batch";
+      extraEl.textContent = `${totalDue - sessionDue} more available`;
+    } else {
+      labelEl.textContent = 'Due today';
+      extraEl.textContent = '';
+    }
+  }
   document.getElementById('srsStreak').textContent = meta.streak || 0;
   document.getElementById('srsMastered').textContent = getMasteredCount();
   document.getElementById('srsNewToday').textContent = getNewSeenTodayCount();
@@ -1748,6 +1776,7 @@ function renderSRSCard() {
     const pool = srsCategory === 'All' ? Object.values(db.categories).flat() : (db.categories[srsCategory] || []);
     const newRemaining = pool.filter(i => !srs[srsKey(i)]).length;
     const newSeenToday = getNewSeenTodayCount();
+    const totalStillDue = getTotalDueCount(srsCategory);
     const catLabel = srsCategory === 'All' ? '' : ` in <strong>${srsCategory}</strong>`;
     area.innerHTML = `
       <div class="srs-empty">
@@ -1757,13 +1786,15 @@ function renderSRSCard() {
         ${newSeenToday > 0 ? `<span style="color:var(--gold);font-size:0.8rem;margin-top:0.5rem;display:block">${newSeenToday} new cards introduced today</span>` : ''}
         ${newRemaining > 0 ? `<span style="color:var(--mist);font-size:0.75rem;display:block;margin-top:0.3rem">${newRemaining} unseen cards remaining</span>` : ''}
         </div>
-        ${newRemaining > 0 ? `<button class="ctrl-btn ghost" style="margin-top:1rem" onclick="initReview(true)">Continue with more new cards (+${Math.min(newRemaining,50)})</button>` : ''}
+        ${totalStillDue > 0 ? `<button class="ctrl-btn" style="margin-top:1rem" onclick="initReview(false)">Continue (next batch of ${DAILY_REVIEW_CAP})</button>` : ''}
+        ${newRemaining > 0 && totalStillDue === 0 ? `<button class="ctrl-btn ghost" style="margin-top:1rem" onclick="initReview(true)">Continue with more new cards (+${Math.min(newRemaining,DAILY_REVIEW_CAP)})</button>` : ''}
       </div>`;
     return;
   }
 
   if (srsCurrentIndex >= srsDueQueue.length) {
-    const remaining = getDueItems(false, srsCategory).length;
+    const remaining = getDueItems(false, srsCategory).length; // in current capped batch
+    const totalStillDue = getTotalDueCount(srsCategory);
     const pool = srsCategory === 'All' ? Object.values(db.categories).flat() : (db.categories[srsCategory] || []);
     const newRemaining = pool.filter(i => !srs[srsKey(i)]).length;
     area.innerHTML = `
@@ -1771,11 +1802,12 @@ function renderSRSCard() {
         <div class="srs-empty-icon">🎉</div>
         <div class="srs-empty-title">Session complete!</div>
         <div class="srs-empty-sub">You reviewed <strong>${srsSessionDone}</strong> cards.
-        ${remaining > 0 ? `<br><span style="color:var(--mist);font-size:0.75rem">${remaining} still due (rated "Again")</span>` : '<br><span style="color:var(--moss)">All due cards done! 🌿</span>'}
+        ${totalStillDue > 0 ? `<br><span style="color:var(--mist);font-size:0.75rem">${totalStillDue} more cards still due</span>` : '<br><span style="color:var(--moss)">All due cards done! 🌿</span>'}
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin-top:1rem">
-          ${remaining > 0 ? `<button class="ctrl-btn" onclick="initReview()">Review remaining (${remaining})</button>` : ''}
-          ${newRemaining > 0 ? `<button class="ctrl-btn ghost" onclick="initReview(true)">Keep going — more new cards (+${Math.min(newRemaining,50)})</button>` : ''}
+          ${totalStillDue > 0 ? `<button class="ctrl-btn" onclick="initReview(false)">Continue (next batch, up to ${DAILY_REVIEW_CAP})</button>` : ''}
+          ${totalStillDue > DAILY_REVIEW_CAP ? `<button class="ctrl-btn ghost" onclick="initReview(true)">Do all (${totalStillDue})</button>` : ''}
+          ${totalStillDue === 0 && newRemaining > 0 ? `<button class="ctrl-btn ghost" onclick="initReview(true)">Keep going — more new cards (+${Math.min(newRemaining,DAILY_REVIEW_CAP)})</button>` : ''}
         </div>
       </div>`;
     renderSRSStats();
