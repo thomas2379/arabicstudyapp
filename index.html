@@ -317,83 +317,6 @@
   .ctrl-btn.ghost { background: none; color: var(--nile); }
   .ctrl-btn.ghost:hover { background: var(--papyrus); }
 
-  /* QUIZ */
-  .quiz-area {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  .quiz-q {
-    background: var(--card-bg);
-    border: 1px solid rgba(200,149,42,0.3);
-    border-left: 4px solid var(--rust);
-    border-radius: 4px;
-    padding: 1.5rem;
-    box-shadow: var(--shadow);
-    text-align: center;
-  }
-
-  .quiz-prompt {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--mist);
-    margin-bottom: 0.75rem;
-  }
-
-  .quiz-word {
-    font-family: 'Cairo', sans-serif;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--rust);
-    direction: rtl;
-  }
-
-  .quiz-word.english-q {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.6rem;
-    color: var(--nile);
-    direction: ltr;
-  }
-
-  .quiz-options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-  }
-
-  .quiz-opt {
-    font-family: 'Manrope', sans-serif;
-    font-size: 0.78rem;
-    padding: 0.85rem 1rem;
-    border: 1px solid rgba(200,149,42,0.3);
-    background: var(--card-bg);
-    cursor: pointer;
-    border-radius: 3px;
-    transition: all 0.2s;
-    text-align: left;
-  }
-
-  .quiz-opt:hover { background: var(--papyrus); border-color: var(--gold); }
-  .quiz-opt.correct { background: rgba(74,103,65,0.15); border-color: var(--moss); color: var(--moss); }
-  .quiz-opt.wrong { background: rgba(184,74,44,0.1); border-color: var(--rust); color: var(--rust); }
-
-  .quiz-score {
-    text-align: center;
-    font-size: 0.75rem;
-    color: var(--mist);
-  }
-
-  .score-big {
-    font-size: 2.5rem;
-    font-weight: 700;
-    font-family: 'Cormorant Garamond', serif;
-    color: var(--gold);
-    display: block;
-  }
 
   /* UPLOAD */
   .upload-area {
@@ -658,11 +581,45 @@
   @media (max-width: 600px) {
     header { padding: 1rem; }
     .stats-bar { display: none; }
-    .quiz-options { grid-template-columns: 1fr; }
     main { padding: 1.25rem 1rem; }
     .srs-dashboard { grid-template-columns: 1fr 1fr; }
   }
+
+  /* SYNC INDICATOR */
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.65rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    font-size: 0.65rem;
+    color: var(--mist);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: default;
+    transition: all 0.2s;
+  }
+  .sync-status .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #6b7280;
+    transition: background 0.3s;
+  }
+  .sync-status.synced .sync-dot { background: #4ade80; }
+  .sync-status.syncing .sync-dot { background: #facc15; animation: syncPulse 1s ease-in-out infinite; }
+  .sync-status.offline .sync-dot { background: #9ca3af; }
+  .sync-status.error .sync-dot { background: #ef4444; }
+  @keyframes syncPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -675,14 +632,16 @@
     <div><span class="stat-num" id="totalWords">0</span><br>words</div>
     <div><span class="stat-num" id="totalVerbs">0</span><br>verbs</div>
     <div><span class="stat-num" id="totalPhrases">0</span><br>phrases</div>
+    <div class="sync-status offline" id="syncStatus" title="Cloud sync status">
+      <span class="sync-dot"></span>
+      <span id="syncStatusText">offline</span>
+    </div>
   </div>
 </header>
 
 <nav>
   <button class="active" onclick="showTab('browse')">Browse</button>
-  <button onclick="showTab('review')">Review <span id="navDueBadge" style="display:none;background:var(--rust);color:white;border-radius:10px;padding:0.1rem 0.4rem;font-size:0.65rem;margin-left:0.3rem"></span></button>
-  <button onclick="showTab('flashcards')">Flashcards</button>
-  <button onclick="showTab('quiz')">Quiz</button>
+  <button onclick="showTab('review')">Flashcards <span id="navDueBadge" style="display:none;background:var(--rust);color:white;border-radius:10px;padding:0.1rem 0.4rem;font-size:0.65rem;margin-left:0.3rem"></span></button>
   <button onclick="showTab('upload')">+ Add / Export</button>
 </nav>
 
@@ -730,63 +689,7 @@
     <div class="category-grid" id="categoryGrid"></div>
   </div>
 
-  <!-- FLASHCARDS TAB -->
-  <div id="tab-flashcards" style="display:none">
-    <div class="section-title">Flashcards</div>
-    <div class="flashcard-area">
-      <div>
-        <div style="font-size:0.7rem;color:var(--mist);text-align:center;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em;">Study deck</div>
-        <div class="deck-select" id="deckSelect"></div>
-      </div>
-      <div class="progress-bar-wrap" style="width:100%;max-width:520px">
-        <div class="progress-bar-fill" id="fcProgress" style="width:0%"></div>
-      </div>
-      <div class="card-counter" id="fcCounter">Card 0 of 0</div>
-      <div class="card-wrapper" onclick="flipCard()">
-        <div class="card-inner" id="cardInner">
-          <div class="card-face card-front">
-            <div class="card-label">Arabic — tap to flip</div>
-            <div class="card-arabic" id="cardArabic">—</div>
-            <div class="card-hint" id="cardHint"></div>
-          </div>
-          <div class="card-face card-back">
-            <div class="card-label">English</div>
-            <div class="card-english" id="cardEnglish">—</div>
-            <div class="card-hint" id="cardHintBack"></div>
-          </div>
-        </div>
-      </div>
-      <div class="card-controls">
-        <button class="ctrl-btn ghost" onclick="prevCard()">← prev</button>
-        <button class="ctrl-btn" onclick="nextCard()">next →</button>
-        <button class="ctrl-btn ghost" onclick="shuffleDeck()">shuffle</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- QUIZ TAB -->
-  <div id="tab-quiz" style="display:none">
-    <div class="section-title">Quiz</div>
-    <div class="quiz-area">
-      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-        <button class="deck-btn selected" id="qDirBtn" onclick="toggleQuizDir()">Arabic → English</button>
-        <button class="deck-btn" id="qCatBtn" onclick="cycleQuizCat()">All categories</button>
-      </div>
-      <div class="quiz-q" id="quizQ">
-        <div class="quiz-prompt" id="quizPrompt">What does this mean?</div>
-        <div class="quiz-word" id="quizWord">Press start</div>
-      </div>
-      <div class="quiz-options" id="quizOpts"></div>
-      <div id="quizReveal" style="display:none;background:rgba(74,103,65,0.12);border:1px solid var(--moss);border-radius:4px;padding:0.85rem 1.1rem;text-align:center;font-size:0.8rem;color:var(--moss)">
-        <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:0.3rem;opacity:0.7">Correct answer</span>
-        <span id="quizRevealText" style="font-family:'Cairo',sans-serif;font-size:1.1rem;font-weight:600"></span>
-      </div>
-      <div class="quiz-score">
-        Score: <span id="quizScore">0</span> / <span id="quizTotal">0</span>
-        <button class="ctrl-btn" style="margin-left:1rem" onclick="startQuiz()">New Quiz</button>
-      </div>
-    </div>
-  </div>
 
   <!-- UPLOAD TAB -->
   <div id="tab-upload" style="display:none">
@@ -859,19 +762,22 @@ function loadDB() {
   try { const r = localStorage.getItem(DB_KEY); if (r) return JSON.parse(r); } catch(e) {}
   return null;
 }
-function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function saveDBLocal(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function saveDB(db) { saveDBLocal(db); queueCloudSync(); }
 
 function loadSRS() {
   try { const r = localStorage.getItem(SRS_KEY); if (r) return JSON.parse(r); } catch(e) {}
   return {};
 }
-function saveSRS(srs) { localStorage.setItem(SRS_KEY, JSON.stringify(srs)); }
+function saveSRSLocal(srs) { localStorage.setItem(SRS_KEY, JSON.stringify(srs)); }
+function saveSRS(srs) { saveSRSLocal(srs); queueCloudSync(); }
 
 function loadMeta() {
   try { const r = localStorage.getItem(META_KEY); if (r) return JSON.parse(r); } catch(e) {}
   return { streak: 0, lastStudyDate: null };
 }
-function saveMeta(m) { localStorage.setItem(META_KEY, JSON.stringify(m)); }
+function saveMetaLocal(m) { localStorage.setItem(META_KEY, JSON.stringify(m)); }
+function saveMeta(m) { saveMetaLocal(m); queueCloudSync(); }
 
 function initDB() {
   // Always start from existing data (preserves user-added vocab + SRS)
@@ -1582,20 +1488,6 @@ let srs = loadSRS();
 let meta = loadMeta();
 let currentTab = 'browse';
 
-// flashcard state
-let fcDeck = [];
-let fcIndex = 0;
-let fcCat = 'All';
-
-// quiz state
-let quizItems = [];
-let quizIndex = 0;
-let quizScore = 0;
-let quizDir = 'ar2en';
-let quizCat = 'All';
-let quizCatIndex = 0;
-let quizAnswered = false;
-
 // SRS state
 let srsDueQueue = [];
 let srsCurrentIndex = 0;
@@ -1797,16 +1689,14 @@ function updateNavBadge() {
 // ============================================================
 function showTab(tab) {
   currentTab = tab;
-  ['browse','review','flashcards','quiz','upload'].forEach(t => {
+  ['browse','review','upload'].forEach(t => {
     document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
   });
   document.querySelectorAll('nav button').forEach((b,i) => {
-    b.classList.toggle('active', ['browse','review','flashcards','quiz','upload'][i]===tab);
+    b.classList.toggle('active', ['browse','review','upload'][i]===tab);
   });
   if (tab==='browse') renderBrowse();
   if (tab==='review') initReview();
-  if (tab==='flashcards') initFlashcards();
-  if (tab==='quiz') initQuiz();
 }
 
 // ============================================================
@@ -2147,186 +2037,6 @@ function toggleCat(header) {
 }
 
 // ============================================================
-// FLASHCARDS
-// ============================================================
-function initFlashcards() {
-  const sel = document.getElementById('deckSelect');
-  const cats = ['All', ...Object.keys(db.categories)];
-  sel.innerHTML = cats.map(c=>`<button class="deck-btn ${c===fcCat?'selected':''}" onclick="selectDeck('${c}')">${c}</button>`).join('');
-  buildDeck();
-}
-
-function selectDeck(cat) {
-  fcCat = cat;
-  fcIndex = 0;
-  document.querySelectorAll('#deckSelect .deck-btn').forEach(b=>{
-    b.classList.toggle('selected', b.textContent===cat);
-  });
-  buildDeck();
-}
-
-function buildDeck() {
-  if (fcCat==='All') {
-    fcDeck = Object.values(db.categories).flat();
-  } else {
-    fcDeck = (db.categories[fcCat]||[]).slice();
-  }
-  fcIndex = 0;
-  showCard();
-}
-
-function showCard() {
-  document.getElementById('cardInner').classList.remove('flipped');
-  if (!fcDeck.length) {
-    document.getElementById('cardArabic').textContent = 'No cards';
-    document.getElementById('cardEnglish').textContent = '—';
-    document.getElementById('fcCounter').textContent = 'No cards';
-    return;
-  }
-  const item = fcDeck[fcIndex];
-  document.getElementById('cardArabic').textContent = item.ar;
-  document.getElementById('cardEnglish').textContent = item.en;
-  document.getElementById('cardHint').textContent = '';
-  document.getElementById('cardHintBack').textContent = '';
-  document.getElementById('fcCounter').textContent = `Card ${fcIndex+1} of ${fcDeck.length}`;
-  document.getElementById('fcProgress').style.width = ((fcIndex+1)/fcDeck.length*100)+'%';
-}
-
-function flipCard() {
-  document.getElementById('cardInner').classList.toggle('flipped');
-}
-
-function nextCard() {
-  fcIndex = (fcIndex+1) % fcDeck.length;
-  showCard();
-}
-
-function prevCard() {
-  fcIndex = (fcIndex-1+fcDeck.length) % fcDeck.length;
-  showCard();
-}
-
-function shuffleDeck() {
-  for (let i=fcDeck.length-1;i>0;i--) {
-    const j = Math.floor(Math.random()*(i+1));
-    [fcDeck[i],fcDeck[j]]=[fcDeck[j],fcDeck[i]];
-  }
-  fcIndex=0;
-  showCard();
-  toast('Deck shuffled!');
-}
-
-// ============================================================
-// QUIZ
-// ============================================================
-const allCats = () => ['All', ...Object.keys(db.categories)];
-
-function initQuiz() {
-  startQuiz();
-}
-
-function toggleQuizDir() {
-  quizDir = quizDir==='ar2en'?'en2ar':'ar2en';
-  document.getElementById('qDirBtn').textContent = quizDir==='ar2en'?'Arabic → English':'English → Arabic';
-  startQuiz();
-}
-
-function cycleQuizCat() {
-  const cats = allCats();
-  quizCatIndex = (quizCatIndex+1)%cats.length;
-  quizCat = cats[quizCatIndex];
-  document.getElementById('qCatBtn').textContent = quizCat;
-  startQuiz();
-}
-
-function startQuiz() {
-  let pool;
-  if (quizCat==='All') pool = Object.values(db.categories).flat();
-  else pool = (db.categories[quizCat]||[]).slice();
-
-  if (pool.length < 4) { 
-    document.getElementById('quizWord').textContent = 'Need 4+ items in this category';
-    document.getElementById('quizOpts').innerHTML='';
-    return;
-  }
-
-  quizItems = [...pool].sort(()=>Math.random()-0.5);
-  quizIndex = 0;
-  quizScore = 0;
-  quizAnswered = false;
-  updateQuizScore();
-  showQuestion();
-}
-
-function showQuestion() {
-  if (quizIndex >= quizItems.length) {
-    document.getElementById('quizWord').textContent = '🎉 Done!';
-    document.getElementById('quizWord').className = 'quiz-word english-q';
-    document.getElementById('quizPrompt').textContent = 'Round complete!';
-    document.getElementById('quizOpts').innerHTML = `<div style="grid-column:1/-1;text-align:center;font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold)">Score: ${quizScore}/${quizItems.length}</div>`;
-    return;
-  }
-
-  quizAnswered = false;
-  document.getElementById('quizReveal').style.display = 'none';
-  const item = quizItems[quizIndex];
-  const pool = quizCat==='All' ? Object.values(db.categories).flat() : (db.categories[quizCat]||[]);
-
-  if (quizDir==='ar2en') {
-    document.getElementById('quizPrompt').textContent = 'What does this mean?';
-    document.getElementById('quizWord').textContent = item.ar;
-    document.getElementById('quizWord').className = 'quiz-word';
-    const wrongs = pool.filter(x=>norm(x.ar)!==norm(item.ar)).sort(()=>Math.random()-0.5).slice(0,3);
-    const opts = shuffle([item, ...wrongs]);
-    document.getElementById('quizOpts').innerHTML = opts.map(o=>`
-      <button class="quiz-opt" onclick="answerQuiz(this,'${esc(o.en)}','${esc(item.en)}')">${o.en}</button>`).join('');
-  } else {
-    document.getElementById('quizPrompt').textContent = 'How do you say this?';
-    document.getElementById('quizWord').textContent = item.en;
-    document.getElementById('quizWord').className = 'quiz-word english-q';
-    const wrongs = pool.filter(x=>norm(x.en)!==norm(item.en)).sort(()=>Math.random()-0.5).slice(0,3);
-    const opts = shuffle([item, ...wrongs]);
-    document.getElementById('quizOpts').innerHTML = opts.map(o=>`
-      <button class="quiz-opt" onclick="answerQuiz(this,'${esc(o.ar)}','${esc(item.ar)}')">${o.ar}</button>`).join('');
-  }
-}
-
-function esc(s) { return s.replace(/'/g,"\\'"); }
-function shuffle(a) { return [...a].sort(()=>Math.random()-0.5); }
-
-function answerQuiz(btn, chosen, correct) {
-  if (quizAnswered) return;
-  quizAnswered = true;
-  const isCorrect = norm(chosen)===norm(correct);
-  const opts = document.querySelectorAll('.quiz-opt');
-  opts.forEach(b => {
-    const val = b.textContent.trim();
-    const cVal = quizDir==='ar2en' ? quizItems[quizIndex].en : quizItems[quizIndex].ar;
-    if (norm(val)===norm(cVal)) b.classList.add('correct');
-    else if (b===btn) b.classList.add('wrong');
-    b.disabled = true;
-  });
-  if (isCorrect) {
-    document.getElementById('quizReveal').style.display = 'none';
-    quizScore++;
-  } else {
-    const item = quizItems[quizIndex];
-    const revealText = quizDir==='ar2en'
-      ? item.ar + '  →  ' + item.en
-      : item.en + '  →  ' + item.ar;
-    document.getElementById('quizRevealText').textContent = revealText;
-    document.getElementById('quizReveal').style.display = 'block';
-  }
-  updateQuizScore();
-  setTimeout(()=>{ quizIndex++; showQuestion(); }, isCorrect ? 700 : 1800);
-}
-
-function updateQuizScore() {
-  document.getElementById('quizScore').textContent = quizScore;
-  document.getElementById('quizTotal').textContent = quizIndex;
-}
-
-// ============================================================
 // UPLOAD / PARSE
 // ============================================================
 function processUpload() {
@@ -2429,14 +2139,154 @@ document.addEventListener('keydown', e => {
       }
     }
   }
+});
 
-  // FLASHCARDS tab — space = flip, arrow keys = prev/next
-  if (currentTab === 'flashcards') {
-    if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); flipCard(); }
-    if (e.key === 'ArrowRight') nextCard();
-    if (e.key === 'ArrowLeft') prevCard();
+
+
+// ============================================================
+// FIREBASE CLOUD SYNC
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyBPHgWLSaG0cU6aCGI0OYi2xghNRsdbAjM",
+  authDomain: "arabic-app-e3048.firebaseapp.com",
+  projectId: "arabic-app-e3048",
+  storageBucket: "arabic-app-e3048.firebasestorage.app",
+  messagingSenderId: "935442318047",
+  appId: "1:935442318047:web:48893e78333f47c63e1f6a"
+};
+
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const fbStore = firebase.firestore();
+
+const CLOUD_DOC_PATH = 'userdata/main';
+const LAST_MODIFIED_KEY = 'masri_last_modified';
+
+var cloudReady = false;
+var cloudDocRef = null;
+var syncTimer = null;
+var isSyncing = false;
+
+function setSyncStatus(status, msg) {
+  const el = document.getElementById('syncStatus');
+  const txt = document.getElementById('syncStatusText');
+  if (!el) return;
+  el.classList.remove('synced', 'syncing', 'offline', 'error');
+  el.classList.add(status);
+  const labels = { synced: 'synced', syncing: 'syncing', offline: 'offline', error: 'sync error' };
+  txt.textContent = msg || labels[status] || status;
+  el.title = msg || labels[status] || status;
+}
+
+async function initCloud() {
+  setSyncStatus('syncing', 'connecting');
+  try {
+    await fbAuth.signInAnonymously();
+    cloudDocRef = fbStore.doc(CLOUD_DOC_PATH);
+
+    const snap = await cloudDocRef.get();
+    const localTime = parseInt(localStorage.getItem(LAST_MODIFIED_KEY) || '0');
+
+    if (snap.exists) {
+      const data = snap.data();
+      const cloudTime = data.lastModified ? data.lastModified.toMillis() : 0;
+
+      if (cloudTime > localTime) {
+        // Cloud has newer data — adopt it
+        let changed = false;
+        if (data.vocab && data.vocab.categories) {
+          db = data.vocab;
+          saveDBLocal(db);
+          changed = true;
+        }
+        if (data.srs) {
+          srs = data.srs;
+          saveSRSLocal(srs);
+          changed = true;
+        }
+        if (data.meta) {
+          meta = data.meta;
+          saveMetaLocal(meta);
+          changed = true;
+        }
+        localStorage.setItem(LAST_MODIFIED_KEY, cloudTime.toString());
+        if (changed) {
+          // Re-render whichever tab is active
+          if (currentTab === 'browse') renderBrowse();
+          else if (currentTab === 'review') initReview();
+          renderBrowse(); // also refresh totals
+          updateNavBadge();
+        }
+      } else if (cloudTime < localTime || cloudTime === 0) {
+        // Local is newer — push it up
+        cloudReady = true;
+        await doCloudSync();
+      }
+    } else {
+      // No cloud doc yet — push local up to seed it
+      cloudReady = true;
+      await doCloudSync();
+    }
+
+    cloudReady = true;
+    setSyncStatus('synced');
+  } catch (err) {
+    console.error('Cloud init failed:', err);
+    setSyncStatus('error', 'offline');
+    // App still works from localStorage cache
+  }
+}
+
+function queueCloudSync() {
+  if (typeof cloudReady === 'undefined' || !cloudReady) return;
+  setSyncStatus('syncing');
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(doCloudSync, 1200);
+}
+
+async function doCloudSync() {
+  if (!cloudDocRef) return;
+  if (isSyncing) {
+    // Will retry on next change
+    return;
+  }
+  isSyncing = true;
+  try {
+    const now = Date.now();
+    await cloudDocRef.set({
+      vocab: db,
+      srs: srs,
+      meta: meta,
+      lastModified: firebase.firestore.FieldValue.serverTimestamp(),
+      clientTime: now,
+    });
+    localStorage.setItem(LAST_MODIFIED_KEY, now.toString());
+    setSyncStatus('synced');
+  } catch (err) {
+    console.error('Cloud sync failed:', err);
+    setSyncStatus('error');
+    // Retry in 5 sec
+    setTimeout(() => { if (cloudReady) queueCloudSync(); }, 5000);
+  } finally {
+    isSyncing = false;
+  }
+}
+
+// Network status awareness
+window.addEventListener('online', () => {
+  if (cloudReady) {
+    setSyncStatus('syncing', 'reconnecting');
+    queueCloudSync();
+  } else {
+    initCloud();
   }
 });
+window.addEventListener('offline', () => {
+  setSyncStatus('offline');
+});
+
+// Kick off cloud sync
+initCloud();
 
 </script>
 </body>
