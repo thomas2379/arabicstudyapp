@@ -1902,6 +1902,7 @@ function renderSRSCard() {
       <button class="rate-btn rate-easy" onclick="rateSRS(3)">Easy <span style="opacity:0.45;font-size:0.6rem">[P]</span><br><span style="font-size:0.6rem;opacity:0.7">${previewInterval(3)}</span></button>
     </div>
     <div id="srsFlipHint" style="font-size:0.68rem;color:var(--mist)">tap card to reveal — or press <kbd style="font-family:'Manrope',sans-serif;background:var(--papyrus);border:1px solid rgba(0,0,0,0.15);border-radius:3px;padding:0.1rem 0.35rem;font-size:0.65rem">space</kbd> &nbsp;·&nbsp; <kbd style="font-family:'Manrope',sans-serif;background:var(--papyrus);border:1px solid rgba(0,0,0,0.15);border-radius:3px;padding:0.1rem 0.35rem;font-size:0.65rem">Z</kbd> to undo</div>
+    <button class="ctrl-btn ghost" style="font-size:0.65rem;padding:0.35rem 0.85rem;opacity:0.7;margin-top:0.5rem" onclick="deleteCurrentSRSCard()" title="Permanently remove this card from your vocab">🗑 Delete this card</button>
   `;
 }
 
@@ -1976,13 +1977,10 @@ function renderWeakWords() {
   list.innerHTML = `<div class="weak-list-title">⚠ Trouble words</div>` +
     weak.map(item => {
       const c = srs[srsKey(item)];
-      const arEsc = item.ar.replace(/'/g, "\\'");
-      const enEsc = item.en.replace(/'/g, "\\'");
       return `<div class="weak-row">
         <span class="weak-ar">${item.ar}</span>
         <span class="weak-en">${item.en}</span>
         <span class="weak-badge">${c.lapses} ✗</span>
-        <button class="vocab-delete" onclick="deleteVocabByValue('${arEsc}', '${enEsc}')" title="Remove this word">×</button>
       </div>`;
     }).join('');
 }
@@ -2231,6 +2229,17 @@ function findVocabIndex(arabic, english) {
 function deleteVocabByValue(arabic, english) {
   const loc = findVocabIndex(arabic, english);
   if (loc) deleteVocabAt(loc.cat, loc.index, true);
+}
+
+function deleteCurrentSRSCard() {
+  if (!srsDueQueue.length || srsCurrentIndex >= srsDueQueue.length) return;
+  const item = srsDueQueue[srsCurrentIndex];
+  const loc = findVocabIndex(item.ar, item.en);
+  if (!loc) {
+    toast('Could not find this card in vocab.');
+    return;
+  }
+  deleteVocabAt(loc.cat, loc.index);
 }
 
 
