@@ -579,10 +579,35 @@
   .export-sub { font-size: 0.68rem; color: var(--mist); margin-top: 0.2rem; }
 
   @media (max-width: 600px) {
-    header { padding: 1rem; }
+    header { padding: 0.85rem 1rem; gap: 0.5rem; }
     .stats-bar { display: none; }
+    .sync-status { font-size: 0.6rem; padding: 0.25rem 0.55rem; }
     main { padding: 1.25rem 1rem; }
     .srs-dashboard { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* DELETE BUTTON */
+  .vocab-delete {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--mist);
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0 0.4rem;
+    margin-left: auto;
+    transition: opacity 0.15s, color 0.15s, transform 0.15s;
+    font-family: 'Manrope', sans-serif;
+  }
+  .vocab-row:hover .vocab-delete,
+  .weak-row:hover .vocab-delete {
+    opacity: 0.55;
+  }
+  .vocab-delete:hover {
+    opacity: 1 !important;
+    color: var(--rust);
+    transform: scale(1.15);
   }
 
   /* SYNC INDICATOR */
@@ -632,10 +657,10 @@
     <div><span class="stat-num" id="totalWords">0</span><br>words</div>
     <div><span class="stat-num" id="totalVerbs">0</span><br>verbs</div>
     <div><span class="stat-num" id="totalPhrases">0</span><br>phrases</div>
-    <div class="sync-status offline" id="syncStatus" title="Cloud sync status">
-      <span class="sync-dot"></span>
-      <span id="syncStatusText">offline</span>
-    </div>
+  </div>
+  <div class="sync-status offline" id="syncStatus" title="Cloud sync status">
+    <span class="sync-dot"></span>
+    <span id="syncStatusText">offline</span>
   </div>
 </header>
 
@@ -1668,8 +1693,18 @@ function getMasteredCount() {
 
 function getWeakItems() {
   const all = Object.values(db.categories).flat();
-  return all
-    .filter(item => srs[srsKey(item)] && srs[srsKey(item)].lapses > 0)
+  // Dedupe by srsKey so duplicate vocab entries (same Arabic) only show once
+  const seen = new Set();
+  const unique = [];
+  for (const item of all) {
+    const k = srsKey(item);
+    if (seen.has(k)) continue;
+    if (srs[k] && srs[k].lapses > 0) {
+      seen.add(k);
+      unique.push(item);
+    }
+  }
+  return unique
     .sort((a,b) => (srs[srsKey(b)].lapses||0) - (srs[srsKey(a)].lapses||0))
     .slice(0, 8);
 }
@@ -1905,6 +1940,7 @@ function rateSRS(rating) {
   srsCurrentIndex++;
   renderSRSStats();
   renderSRSCard();
+  renderWeakWords();
 }
 
 function undoSRS() {
@@ -1927,6 +1963,7 @@ function undoSRS() {
 
   renderSRSStats();
   renderSRSCard();
+  renderWeakWords();
   toast('↩ Undone');
 }
 
@@ -1939,10 +1976,13 @@ function renderWeakWords() {
   list.innerHTML = `<div class="weak-list-title">⚠ Trouble words</div>` +
     weak.map(item => {
       const c = srs[srsKey(item)];
+      const arEsc = item.ar.replace(/'/g, "\\'");
+      const enEsc = item.en.replace(/'/g, "\\'");
       return `<div class="weak-row">
         <span class="weak-ar">${item.ar}</span>
         <span class="weak-en">${item.en}</span>
         <span class="weak-badge">${c.lapses} ✗</span>
+        <button class="vocab-delete" onclick="deleteVocabByValue('${arEsc}', '${enEsc}')" title="Remove this word">×</button>
       </div>`;
     }).join('');
 }
@@ -2046,9 +2086,10 @@ function renderBrowse() {
         <span class="cat-count">${items.length}</span>
       </div>
       <div class="cat-items">
-        ${items.map(i=>`<div class="vocab-row">
+        ${items.map((i, idx)=>`<div class="vocab-row">
           <span class="vocab-arabic">${i.ar}</span>
           <span class="vocab-english">${i.en}</span>
+          <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${idx})" title="Remove this word">×</button>
         </div>`).join('')}
       </div>`;
     grid.appendChild(card);
@@ -2138,6 +2179,60 @@ function toast(msg) {
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2200);
 }
+
+// ============================================================
+// DELETE VOCAB
+// ============================================================
+function deleteVocabAt(cat, index, fromWeak) {
+  const items = db.categories[cat];
+  if (!items || index < 0 || index >= items.length) return;
+  const item = items[index];
+  if (!confirm(`Delete "${item.ar}" → "${item.en}"?\n\nThis cannot be undone (use Export/Import for backup).`)) return;
+
+  const key = srsKey(item);
+  items.splice(index, 1);
+
+  // If no remaining vocab entry uses this Arabic, also drop its SRS record
+  const stillUsed = Object.values(db.categories).flat().some(i => srsKey(i) === key);
+  if (!stillUsed && srs[key]) {
+    delete srs[key];
+    saveSRS(srs);
+  }
+
+  // If category is now empty, remove it
+  if (items.length === 0) {
+    delete db.categories[cat];
+  }
+
+  saveDB(db);
+  toast(`Removed: ${item.ar}`);
+
+  // Re-render whatever view they're on
+  if (currentTab === 'browse') renderBrowse();
+  if (currentTab === 'review') {
+    // Rebuild queue in case the deleted card was in it
+    srsDueQueue = srsDueQueue.filter(q => srsKey(q) !== key);
+    renderSRSStats();
+    renderSRSCard();
+    renderWeakWords();
+  }
+  updateNavBadge();
+}
+
+// Helper to find the index of a vocab item across categories (for weak-list deletes)
+function findVocabIndex(arabic, english) {
+  for (const [cat, items] of Object.entries(db.categories)) {
+    const idx = items.findIndex(i => i.ar === arabic && i.en === english);
+    if (idx !== -1) return { cat, index: idx };
+  }
+  return null;
+}
+
+function deleteVocabByValue(arabic, english) {
+  const loc = findVocabIndex(arabic, english);
+  if (loc) deleteVocabAt(loc.cat, loc.index, true);
+}
+
 
 // ============================================================
 // INIT
