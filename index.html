@@ -695,9 +695,18 @@
       </div>
     </div>
 
-    <div style="margin-bottom:1.25rem">
-      <div style="font-size:0.68rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem">Category filter</div>
-      <div class="deck-select" id="reviewCatSelect"></div>
+    <div style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start">
+      <div style="flex:0 0 auto">
+        <div style="font-size:0.68rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem">Direction</div>
+        <div class="deck-select" id="directionSelect">
+          <button class="deck-btn" id="dirBtnAr2En" onclick="setReviewDirection('ar2en')">Arabic → English</button>
+          <button class="deck-btn" id="dirBtnEn2Ar" onclick="setReviewDirection('en2ar')">English → Arabic</button>
+        </div>
+      </div>
+      <div style="flex:1 1 auto;min-width:200px">
+        <div style="font-size:0.68rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem">Category filter</div>
+        <div class="deck-select" id="reviewCatSelect"></div>
+      </div>
     </div>
 
     <div class="srs-card-area" id="srsCardArea">
@@ -1523,6 +1532,7 @@ let srsSessionTotal = 0;
 let srsUndoStack = [];
 let srsUnlimited = false;
 let srsCategory = 'All'; // category filter for review
+let reviewDirection = localStorage.getItem('masri_review_direction') || 'ar2en'; // 'ar2en' or 'en2ar'
 
 // ============================================================
 // SRS ENGINE — Anki-style SM-2
@@ -1764,6 +1774,7 @@ function initReview(unlimited = false) {
   renderSRSStats();
   renderSRSCard();
   renderWeakWords();
+  updateDirectionButtons();
 }
 
 function renderSRSCategorySelector() {
@@ -1781,6 +1792,21 @@ function renderSRSCategorySelector() {
 function selectReviewCategory(cat) {
   srsCategory = cat;
   initReview(false);
+}
+
+function setReviewDirection(dir) {
+  if (dir !== 'ar2en' && dir !== 'en2ar') return;
+  reviewDirection = dir;
+  localStorage.setItem('masri_review_direction', dir);
+  updateDirectionButtons();
+  renderSRSCard();
+}
+
+function updateDirectionButtons() {
+  const a = document.getElementById('dirBtnAr2En');
+  const e = document.getElementById('dirBtnEn2Ar');
+  if (a) a.classList.toggle('selected', reviewDirection === 'ar2en');
+  if (e) e.classList.toggle('selected', reviewDirection === 'en2ar');
 }
 
 function renderSRSStats() {
@@ -1883,6 +1909,7 @@ function renderSRSCard() {
     </div>
     <div class="card-wrapper" onclick="srsFlipCard()" id="srsCardWrapper">
       <div class="card-inner" id="srsCardInner">
+        ${reviewDirection === 'ar2en' ? `
         <div class="card-face card-front">
           <div class="card-label">Arabic — tap to reveal</div>
           <div class="card-arabic">${item.ar}</div>
@@ -1893,6 +1920,18 @@ function renderSRSCard() {
           <div class="card-english">${item.en}</div>
           <div class="card-arabic" style="font-size:1.2rem;margin-top:0.4rem">${item.ar}</div>
         </div>
+        ` : `
+        <div class="card-face card-front">
+          <div class="card-label">English — tap to reveal</div>
+          <div class="card-english">${item.en}</div>
+          <div style="margin-top:0.75rem">${stateBadge}</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-label">How well did you know it?</div>
+          <div class="card-arabic">${item.ar}</div>
+          <div class="card-english" style="font-size:0.95rem;margin-top:0.4rem">${item.en}</div>
+        </div>
+        `}
       </div>
     </div>
     <div class="rating-btns" id="srsRatingBtns" style="display:none">
