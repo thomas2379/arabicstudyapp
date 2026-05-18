@@ -2385,12 +2385,31 @@ async function initCloud() {
           changed = true;
         }
         localStorage.setItem(LAST_MODIFIED_KEY, cloudTime.toString());
-        if (changed) {
+
+        // Re-merge built-in vocab from this HTML version (in case new vocab was added)
+        // initDB() skips duplicates by srsKey, so SRS progress on existing cards is preserved.
+        const beforeCount = Object.values(db.categories || {}).flat().length;
+        db = initDB();
+        const afterCount = Object.values(db.categories || {}).flat().length;
+        const newAdded = afterCount - beforeCount;
+        if (newAdded > 0) {
+          console.log(`[cloud] Merged ${newAdded} new vocab item(s) from updated HTML.`);
+          // Force a push so other devices get the additions
+          localStorage.setItem(LAST_MODIFIED_KEY, Date.now().toString());
+        }
+
+        if (changed || newAdded > 0) {
           // Re-render whichever tab is active
           if (currentTab === 'browse') renderBrowse();
           else if (currentTab === 'review') initReview();
           renderBrowse(); // also refresh totals
           updateNavBadge();
+        }
+
+        // Push merged result back to cloud so all devices see new built-in vocab
+        if (newAdded > 0) {
+          cloudReady = true;
+          await doCloudSync();
         }
       } else if (cloudTime < localTime || cloudTime === 0) {
         // Local is newer — push it up
