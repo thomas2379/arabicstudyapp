@@ -610,6 +610,31 @@
     transform: scale(1.15);
   }
 
+  /* VERB GROUPS */
+  .verb-group { border-bottom: 1px solid rgba(200,149,42,0.1); }
+  .verb-group-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding: 0.55rem 1.1rem;
+    cursor: pointer;
+    background: rgba(220,123,64,0.04);
+    transition: background 0.15s;
+  }
+  .verb-group-header:hover { background: rgba(220,123,64,0.09); }
+  .verb-infinitive {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    color: var(--rust);
+    font-size: 1rem;
+    direction: rtl;
+  }
+  .verb-english { flex: 1; color: var(--mist); font-size: 0.75rem; font-style: italic; }
+  .verb-toggle { color: var(--mist); font-size: 0.7rem; transition: transform 0.2s; }
+  .verb-group.open .verb-toggle { transform: rotate(180deg); }
+  .verb-conjugations { display: none; padding-left: 0.6rem; background: rgba(255,255,255,0.5); }
+  .verb-group.open .verb-conjugations { display: block; }
+
   /* SYNC INDICATOR */
   .sync-status {
     display: flex;
@@ -1095,115 +1120,91 @@ function initDB() {
   // ---- VERB CONJUGATIONS ----
   // Format: verb (infinitive) — then each person
   add(db, 'Verb Conjugations', [
-    // ye7ebb - to like/love
-    {ar:'Ana ba7ebb', en:'I like/love'},
-    {ar:'Enta bet7ebb', en:'You (m) like/love'},
-    {ar:'Enty bet7ebby', en:'You (f) like/love'},
-    {ar:'Howwa bey7ebb', en:'He likes/loves'},
-    {ar:'Heyya bet7ebb', en:'She likes/loves'},
-    // yeroo7 - to go
-    {ar:'Ana baroo7', en:'I go'},
-    {ar:'Enta betroo7', en:'You (m) go'},
-    {ar:'Enty betroo7y', en:'You (f) go'},
-    {ar:'Howwa beyroo7', en:'He goes'},
-    {ar:'Heyya betroo7', en:'She goes'},
-    // yekteb - to write
-    {ar:'Ana bakteb', en:'I write'},
-    {ar:'Enta betekteb', en:'You (m) write'},
-    {ar:'Enty betekteBy', en:'You (f) write'},
-    {ar:'Howwa beyekteb', en:'He writes'},
-    {ar:'Heyya betekteb', en:'She writes'},
-    // yeshrab - to drink
-    {ar:'Ana bashrab', en:'I drink'},
-    {ar:'Enta beteshrab', en:'You (m) drink'},
-    {ar:'Enty beteshraby', en:'You (f) drink'},
-    {ar:'Howwa beyeshrab', en:'He drinks'},
-    {ar:'Heyya beteshrab', en:'She drinks'},
-    // yes7a - to wake up
-    {ar:'Ana bas7a', en:'I wake up'},
-    {ar:'Enta betes7a', en:'You (m) wake up'},
-    {ar:'Enty betes7y', en:'You (f) wake up'},
-    // yaakhod - to take
-    {ar:'Ana baakhod', en:'I take'},
-    {ar:'Enta betakhod', en:'You (m) take'},
-    {ar:'Enty betakhody', en:'You (f) take'},
-    // yokhrog - to go out
-    {ar:'Ana bakhrog', en:'I go out'},
-    {ar:'Enta betokhrog', en:'You (m) go out'},
-    {ar:'Enty betokhrogy', en:'You (f) go out'},
-    // ye2ra - to read
-    {ar:'Ana ba2ra', en:'I read'},
-    {ar:'Enta bete2ra', en:'You (m) read'},
-    {ar:'Enty bete2ry', en:'You (f) read'},
-    {ar:'Howwa beye2ra', en:'He reads'},
-    {ar:'Heyya bete2ra', en:'She reads'},
-    // yerga3 - to come back
-    {ar:'Ana barga3', en:'I come back'},
-    {ar:'Enta betrga3', en:'You (m) come back'},
-    {ar:'Enty betrga3y', en:'You (f) come back'},
-    // yeshtaghal - to work
-    {ar:'Ana bashtaghal', en:'I work'},
-    {ar:'Enta beteshtaghal', en:'You (m) work'},
-    {ar:'Enty beteshtaghaly', en:'You (f) work'},
-    // yeftar - to have breakfast
-    {ar:'Ana baftar', en:'I have breakfast'},
-    {ar:'Enta beteftar', en:'You (m) have breakfast'},
-    {ar:'Enty beteftar y', en:'You (f) have breakfast'},
-    // yetghadda - to have lunch
-    {ar:'Ana batghadda', en:'I have lunch'},
-    {ar:'Enta betetghadda', en:'You (m) have lunch'},
-    {ar:'Enty betetghaddy', en:'You (f) have lunch'},
-    // yet3ash-sha - to have dinner
-    {ar:'Ana bat3ash-sha', en:'I have dinner'},
-    {ar:'Enta betet3ash-sha', en:'You (m) have dinner'},
-    {ar:'Enty betet3ash-shy', en:'You (f) have dinner'},
-    // yel3ab - to play
-    {ar:'Ana bal3ab', en:'I play'},
-    {ar:'Enta betel3ab', en:'You (m) play'},
-    {ar:'Enty betel3aby', en:'You (f) play'},
-    // ye2aabel - to meet
-    {ar:'Ana ba2aabel', en:'I meet'},
-    {ar:'Enta bet2aabel', en:'You (m) meet'},
-    {ar:'Enty bet2aabely', en:'You (f) meet'},
-    // yekhallas - to finish
-    {ar:'Ana bakhallas', en:'I finish'},
-    {ar:'Enta betkhallas', en:'You (m) finish'},
-    {ar:'Howwa beykhallas', en:'He finishes'},
-    {ar:'Heyya betkhallas', en:'She finishes'},
-    // yezoor - to visit
-    {ar:'Ana bazoor', en:'I visit'},
-    {ar:'Enta betzoor', en:'You (m) visit'},
-    {ar:'Howwa beyzoor', en:'He visits'},
-    // yekrah - to hate
-    {ar:'Ana bakrah', en:'I hate'},
-    {ar:'Enta betekrah', en:'You (m) hate'},
-    {ar:'Howwa beykrah', en:'He hates'},
-    // yewsal - to arrive
-    {ar:'Ana bawsal', en:'I arrive'},
-    {ar:'Enta betewsal', en:'You (m) arrive'},
-    {ar:'Howwa beyewsal', en:'He arrives'},
-    // yedres - to study
-    {ar:'Ana badres', en:'I study'},
-    {ar:'Enta betedres', en:'You (m) study'},
-    {ar:'Howwa beydres', en:'He studies'},
-    // yeshtery - to buy
-    {ar:'Ana bashtery', en:'I buy'},
-    {ar:'Enta beteshtery', en:'You (m) buy'},
-    {ar:'Howwa beyshtery', en:'He buys'},
-    // yaakol - to eat
-    {ar:'Ana baakol', en:'I eat'},
-    {ar:'Enta betaakol', en:'You (m) eat'},
-    {ar:'Enty betaakly', en:'You (f) eat'},
-    {ar:'Howwa beyaakol', en:'He eats'},
-    {ar:'Heyya betaakol', en:'She eats'},
-    // yenaDDaf - to clean
-    {ar:'Ana banaDDaf', en:'I clean'},
-    {ar:'Enta betnaDDaf', en:'You (m) clean'},
-    {ar:'Howwa beynaDDaf', en:'He cleans'},
-    // yetla3 - to go up/leave
-    {ar:'Ana batla3', en:'I go up / leave'},
-    {ar:'Enta betetla3', en:'You (m) go up / leave'},
-    {ar:'Howwa beyetla3', en:'He goes up / leaves'},
+    {ar:'Ana ba7ebb', en:'I like/love', verb:'Ye7ebb', verbEn:'to like/love'},
+    {ar:'Enta bet7ebb', en:'You (m) like/love', verb:'Ye7ebb', verbEn:'to like/love'},
+    {ar:'Enty bet7ebby', en:'You (f) like/love', verb:'Ye7ebb', verbEn:'to like/love'},
+    {ar:'Howwa bey7ebb', en:'He likes/loves', verb:'Ye7ebb', verbEn:'to like/love'},
+    {ar:'Heyya bet7ebb', en:'She likes/loves', verb:'Ye7ebb', verbEn:'to like/love'},
+    {ar:'Ana baroo7', en:'I go', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Enta betroo7', en:'You (m) go', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Enty betroo7y', en:'You (f) go', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Howwa beyroo7', en:'He goes', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Heyya betroo7', en:'She goes', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Ana bakteb', en:'I write', verb:'Yekteb', verbEn:'to write'},
+    {ar:'Enta betekteb', en:'You (m) write', verb:'Yekteb', verbEn:'to write'},
+    {ar:'Enty betekteBy', en:'You (f) write', verb:'Yekteb', verbEn:'to write'},
+    {ar:'Howwa beyekteb', en:'He writes', verb:'Yekteb', verbEn:'to write'},
+    {ar:'Heyya betekteb', en:'She writes', verb:'Yekteb', verbEn:'to write'},
+    {ar:'Ana bashrab', en:'I drink', verb:'Yeshrab', verbEn:'to drink'},
+    {ar:'Enta beteshrab', en:'You (m) drink', verb:'Yeshrab', verbEn:'to drink'},
+    {ar:'Enty beteshraby', en:'You (f) drink', verb:'Yeshrab', verbEn:'to drink'},
+    {ar:'Howwa beyeshrab', en:'He drinks', verb:'Yeshrab', verbEn:'to drink'},
+    {ar:'Heyya beteshrab', en:'She drinks', verb:'Yeshrab', verbEn:'to drink'},
+    {ar:'Ana bas7a', en:'I wake up', verb:'Yes7a', verbEn:'to wake up'},
+    {ar:'Enta betes7a', en:'You (m) wake up', verb:'Yes7a', verbEn:'to wake up'},
+    {ar:'Enty betes7y', en:'You (f) wake up', verb:'Yes7a', verbEn:'to wake up'},
+    {ar:'Ana baakhod', en:'I take', verb:'Yeakhod', verbEn:'to take'},
+    {ar:'Enta betakhod', en:'You (m) take', verb:'Yeakhod', verbEn:'to take'},
+    {ar:'Enty betakhody', en:'You (f) take', verb:'Yeakhod', verbEn:'to take'},
+    {ar:'Ana bakhrog', en:'I go out', verb:'Yekhrog', verbEn:'to go out'},
+    {ar:'Enta betokhrog', en:'You (m) go out', verb:'Yekhrog', verbEn:'to go out'},
+    {ar:'Enty betokhrogy', en:'You (f) go out', verb:'Yekhrog', verbEn:'to go out'},
+    {ar:'Ana ba2ra', en:'I read', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Enta bete2ra', en:'You (m) read', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Enty bete2ry', en:'You (f) read', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Howwa beye2ra', en:'He reads', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Heyya bete2ra', en:'She reads', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Ana barga3', en:'I come back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Enta betrga3', en:'You (m) come back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Enty betrga3y', en:'You (f) come back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Ana bashtaghal', en:'I work', verb:'Yeshtaghal', verbEn:'to work'},
+    {ar:'Enta beteshtaghal', en:'You (m) work', verb:'Yeshtaghal', verbEn:'to work'},
+    {ar:'Enty beteshtaghaly', en:'You (f) work', verb:'Yeshtaghal', verbEn:'to work'},
+    {ar:'Ana baftar', en:'I have breakfast', verb:'Yeftar', verbEn:'to have breakfast'},
+    {ar:'Enta beteftar', en:'You (m) have breakfast', verb:'Yeftar', verbEn:'to have breakfast'},
+    {ar:'Enty beteftar y', en:'You (f) have breakfast', verb:'Yeftar', verbEn:'to have breakfast'},
+    {ar:'Ana batghadda', en:'I have lunch', verb:'Yetghadda', verbEn:'to have lunch'},
+    {ar:'Enta betetghadda', en:'You (m) have lunch', verb:'Yetghadda', verbEn:'to have lunch'},
+    {ar:'Enty betetghaddy', en:'You (f) have lunch', verb:'Yetghadda', verbEn:'to have lunch'},
+    {ar:'Ana bat3ash-sha', en:'I have dinner', verb:'Yet3ash-sha', verbEn:'to have dinner'},
+    {ar:'Enta betet3ash-sha', en:'You (m) have dinner', verb:'Yet3ash-sha', verbEn:'to have dinner'},
+    {ar:'Enty betet3ash-shy', en:'You (f) have dinner', verb:'Yet3ash-sha', verbEn:'to have dinner'},
+    {ar:'Ana bal3ab', en:'I play', verb:'Yel3ab', verbEn:'to play'},
+    {ar:'Enta betel3ab', en:'You (m) play', verb:'Yel3ab', verbEn:'to play'},
+    {ar:'Enty betel3aby', en:'You (f) play', verb:'Yel3ab', verbEn:'to play'},
+    {ar:'Ana ba2aabel', en:'I meet', verb:'Ye2aabel', verbEn:'to meet'},
+    {ar:'Enta bet2aabel', en:'You (m) meet', verb:'Ye2aabel', verbEn:'to meet'},
+    {ar:'Enty bet2aabely', en:'You (f) meet', verb:'Ye2aabel', verbEn:'to meet'},
+    {ar:'Ana bakhallas', en:'I finish', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Enta betkhallas', en:'You (m) finish', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Howwa beykhallas', en:'He finishes', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Heyya betkhallas', en:'She finishes', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Ana bazoor', en:'I visit', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Enta betzoor', en:'You (m) visit', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Howwa beyzoor', en:'He visits', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Ana bakrah', en:'I hate', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Enta betekrah', en:'You (m) hate', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Howwa beykrah', en:'He hates', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Ana bawsal', en:'I arrive', verb:'Yewsal', verbEn:'to arrive'},
+    {ar:'Enta betewsal', en:'You (m) arrive', verb:'Yewsal', verbEn:'to arrive'},
+    {ar:'Howwa beyewsal', en:'He arrives', verb:'Yewsal', verbEn:'to arrive'},
+    {ar:'Ana badres', en:'I study', verb:'Yedres', verbEn:'to study'},
+    {ar:'Enta betedres', en:'You (m) study', verb:'Yedres', verbEn:'to study'},
+    {ar:'Howwa beydres', en:'He studies', verb:'Yedres', verbEn:'to study'},
+    {ar:'Ana bashtery', en:'I buy', verb:'Yeshtery', verbEn:'to buy'},
+    {ar:'Enta beteshtery', en:'You (m) buy', verb:'Yeshtery', verbEn:'to buy'},
+    {ar:'Howwa beyshtery', en:'He buys', verb:'Yeshtery', verbEn:'to buy'},
+    {ar:'Ana baakol', en:'I eat', verb:'Yeakol', verbEn:'to eat'},
+    {ar:'Enta betaakol', en:'You (m) eat', verb:'Yeakol', verbEn:'to eat'},
+    {ar:'Enty betaakly', en:'You (f) eat', verb:'Yeakol', verbEn:'to eat'},
+    {ar:'Howwa beyaakol', en:'He eats', verb:'Yeakol', verbEn:'to eat'},
+    {ar:'Heyya betaakol', en:'She eats', verb:'Yeakol', verbEn:'to eat'},
+    {ar:'Ana banaDDaf', en:'I clean', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Enta betnaDDaf', en:'You (m) clean', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Howwa beynaDDaf', en:'He cleans', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Ana batla3', en:'I go up / leave', verb:'Yetla3', verbEn:'to go up / leave'},
+    {ar:'Enta betetla3', en:'You (m) go up / leave', verb:'Yetla3', verbEn:'to go up / leave'},
+    {ar:'Howwa beyetla3', en:'He goes up / leaves', verb:'Yetla3', verbEn:'to go up / leave'},
   ]);
 
   // ---- VERBS (infinitives) ----
@@ -1297,44 +1298,6 @@ function initDB() {
     {ar:'Sanya wa7ada', en:'One moment please'},
     {ar:'Betroo7 esh-shoghl essa3a kaam?', en:'What time do you go to work?'},
     {ar:'Essa3a tamanya w 3ashara es-sob7', en:'At 8:10 in the morning'},
-  ]);
-
-  // ---- ALPHABET ----
-  add(db, 'Alphabet & Pronunciation', [
-    {ar:'أ', en:'A sound'},
-    {ar:'ب', en:'B'},
-    {ar:'ت', en:'T'},
-    {ar:'ث', en:'Th (as in "three") — thoom = garlic'},
-    {ar:'ج', en:'G (as in "go")'},
-    {ar:'ح', en:'7 — heavy H from throat'},
-    {ar:'خ', en:'Kh — Spanish J sound'},
-    {ar:'د', en:'D'},
-    {ar:'ذ', en:'Th (as in "they") — thora = corn'},
-    {ar:'ر', en:'R'},
-    {ar:'ز', en:'Z'},
-    {ar:'س', en:'S (light)'},
-    {ar:'ش', en:'Sh — shams = sun'},
-    {ar:'ص', en:'S (heavy) — Masr = Egypt'},
-    {ar:'ض', en:'D (heavy) — Darab = to beat'},
-    {ar:'ط', en:'T (heavy) — maTar = rain'},
-    {ar:'ظ', en:'TH (heavy)'},
-    {ar:'ع', en:'3 — "ain" — deep throat sound'},
-    {ar:'غ', en:'Gh — ghareed = strange'},
-    {ar:'ف', en:'F'},
-    {ar:'ق', en:'Q — qamar = moon'},
-    {ar:'ك', en:'K — kitaab = book'},
-    {ar:'ل', en:'L — lamba = lamp'},
-    {ar:'م', en:'M — makhada = pillow'},
-    {ar:'ن', en:'N — namla = ant'},
-    {ar:'ه', en:'H — haram = pyramid'},
-    {ar:'و', en:'W / OO — warda = rose'},
-    {ar:'ي', en:'Y / EE — yamaama = dove'},
-    {ar:'ا', en:'AA — long A sound'},
-    {ar:'ة', en:'Ta marbuta — feminine ending (gameela = beautiful f)'},
-    {ar:'Fat7a (بَ)', en:'Short A vowel sound — Ba'},
-    {ar:'Kasra (بِ)', en:'Short E vowel sound — Be'},
-    {ar:'Damma (بُ)', en:'Short O vowel sound — Bo'},
-    {ar:'Sokoon (بْ)', en:'No vowel — consonant only'},
   ]);
 
   // ---- ACTIVE PARTICIPLES ----
@@ -1531,7 +1494,8 @@ let srsSessionDone = 0;
 let srsSessionTotal = 0;
 let srsUndoStack = [];
 let srsUnlimited = false;
-let srsCategory = 'All'; // category filter for review
+let srsCategory = 'All'; // legacy single-category filter
+let srsCatFilter = JSON.parse(localStorage.getItem('masri_cat_filter') || '{"mode":"all","cats":[]}');
 let reviewDirection = localStorage.getItem('masri_review_direction') || 'ar2en'; // 'ar2en' or 'en2ar'
 
 // ============================================================
@@ -1588,6 +1552,7 @@ function applyRating(item, rating) {
       card.state = 'learning';
       card.dueDate = today; // show again today
       card.interval = 0;
+      card.lapses = (card.lapses || 0) + 1;
     } else if (rating === 3) {
       // Easy — immediately graduate
       card.state = 'review';
@@ -1649,9 +1614,16 @@ function getNewSeenTodayCount() {
 
 function getDuePool(category = 'All') {
   const today = todayStr();
-  let all = Object.values(db.categories).flat();
-  if (category !== 'All') {
+  let all;
+  if (typeof srsCatFilter !== 'undefined' && srsCatFilter.mode !== 'all') {
+    all = [];
+    Object.entries(db.categories).forEach(([cat, items]) => {
+      if (filterMatchesCategory(cat)) all.push(...items);
+    });
+  } else if (category !== 'All') {
     all = (db.categories[category] || []);
+  } else {
+    all = Object.values(db.categories).flat();
   }
   const newSeenToday = getNewSeenTodayCount();
 
@@ -1765,7 +1737,7 @@ function showTab(tab) {
 // ============================================================
 function initReview(unlimited = false) {
   srsUnlimited = unlimited;
-  srsDueQueue = getDueItems(unlimited, srsCategory).sort(()=>Math.random()-0.5);
+  srsDueQueue = getDueItems(unlimited, srsCategory).sort((a,b) => srsKey(a).localeCompare(srsKey(b)));
   srsCurrentIndex = 0;
   srsSessionDone = 0;
   srsSessionTotal = srsDueQueue.length;
@@ -1780,18 +1752,76 @@ function initReview(unlimited = false) {
 function renderSRSCategorySelector() {
   const sel = document.getElementById('reviewCatSelect');
   if (!sel) return;
-  const cats = ['All', ...Object.keys(db.categories)];
-  sel.innerHTML = cats.map(c => {
-    const due = getDueItems(false, c).length;
-    const label = c === 'All' ? `All categories` : `${c}`;
-    const badge = due > 0 ? ` <span style="opacity:0.6;font-size:0.65rem">(${due})</span>` : '';
-    return `<button class="deck-btn ${c === srsCategory ? 'selected' : ''}" onclick="selectReviewCategory('${c.replace(/'/g, "\\'")}')">${label}${badge}</button>`;
+  const cats = Object.keys(db.categories).sort();
+  const cs = new Set(srsCatFilter.cats);
+  let modeLabel = '';
+  if (srsCatFilter.mode === 'only') modeLabel = `Only: ${srsCatFilter.cats.length}`;
+  else if (srsCatFilter.mode === 'except') modeLabel = `Except: ${srsCatFilter.cats.length}`;
+  else modeLabel = 'All categories';
+
+  sel.innerHTML = `
+    <div style="width:100%;display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;font-size:0.7rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.05em;flex-wrap:wrap">
+      <span>${modeLabel}</span>
+      ${srsCatFilter.mode !== 'all' ? '<button class="deck-btn" style="font-size:0.65rem;padding:0.2rem 0.5rem" onclick="clearCatFilter()">Reset</button>' : ''}
+      <span style="margin-left:auto;font-size:0.6rem;text-transform:none">Click=include · Click again=exclude · Again=clear</span>
+    </div>
+  ` + cats.map(c => {
+    let state = 'off';
+    if (srsCatFilter.mode === 'only' && cs.has(c)) state = 'include';
+    else if (srsCatFilter.mode === 'except' && cs.has(c)) state = 'exclude';
+    const styles = {
+      off: '',
+      include: 'background:rgba(74,103,65,0.15);border-color:var(--moss);color:var(--moss)',
+      exclude: 'background:rgba(184,74,44,0.12);border-color:var(--rust);color:var(--rust);text-decoration:line-through',
+    };
+    const icon = state === 'include' ? '✓ ' : state === 'exclude' ? '✗ ' : '';
+    return `<button class="deck-btn" style="${styles[state]}" onclick="toggleCatFilter('${c.replace(/'/g, "\\'")}')">${icon}${c}</button>`;
   }).join('');
 }
 
 function selectReviewCategory(cat) {
   srsCategory = cat;
   initReview(false);
+}
+
+function toggleCatFilter(cat) {
+  const cats = new Set(srsCatFilter.cats);
+  if (srsCatFilter.mode === 'all') {
+    srsCatFilter = { mode: 'only', cats: [cat] };
+  } else if (srsCatFilter.mode === 'only') {
+    if (cats.has(cat)) {
+      cats.delete(cat);
+      if (cats.size === 0) srsCatFilter = { mode: 'except', cats: [cat] };
+      else srsCatFilter = { mode: 'only', cats: Array.from(cats) };
+    } else {
+      cats.add(cat);
+      srsCatFilter = { mode: 'only', cats: Array.from(cats) };
+    }
+  } else if (srsCatFilter.mode === 'except') {
+    if (cats.has(cat)) {
+      cats.delete(cat);
+      if (cats.size === 0) srsCatFilter = { mode: 'all', cats: [] };
+      else srsCatFilter = { mode: 'except', cats: Array.from(cats) };
+    } else {
+      cats.add(cat);
+      srsCatFilter = { mode: 'except', cats: Array.from(cats) };
+    }
+  }
+  localStorage.setItem('masri_cat_filter', JSON.stringify(srsCatFilter));
+  initReview(false);
+}
+
+function clearCatFilter() {
+  srsCatFilter = { mode: 'all', cats: [] };
+  localStorage.setItem('masri_cat_filter', JSON.stringify(srsCatFilter));
+  initReview(false);
+}
+
+function filterMatchesCategory(cat) {
+  if (srsCatFilter.mode === 'all') return true;
+  if (srsCatFilter.mode === 'only') return srsCatFilter.cats.includes(cat);
+  if (srsCatFilter.mode === 'except') return !srsCatFilter.cats.includes(cat);
+  return true;
 }
 
 function setReviewDirection(dir) {
@@ -1940,8 +1970,11 @@ function renderSRSCard() {
       <button class="rate-btn rate-good" onclick="rateSRS(2)">Good <span style="opacity:0.45;font-size:0.6rem">[O]</span><br><span style="font-size:0.6rem;opacity:0.7">${previewInterval(2)}</span></button>
       <button class="rate-btn rate-easy" onclick="rateSRS(3)">Easy <span style="opacity:0.45;font-size:0.6rem">[P]</span><br><span style="font-size:0.6rem;opacity:0.7">${previewInterval(3)}</span></button>
     </div>
-    <div id="srsFlipHint" style="font-size:0.68rem;color:var(--mist)">tap card to reveal — or press <kbd style="font-family:'Manrope',sans-serif;background:var(--papyrus);border:1px solid rgba(0,0,0,0.15);border-radius:3px;padding:0.1rem 0.35rem;font-size:0.65rem">space</kbd> &nbsp;·&nbsp; <kbd style="font-family:'Manrope',sans-serif;background:var(--papyrus);border:1px solid rgba(0,0,0,0.15);border-radius:3px;padding:0.1rem 0.35rem;font-size:0.65rem">Z</kbd> to undo</div>
-    <button class="ctrl-btn ghost" style="font-size:0.65rem;padding:0.35rem 0.85rem;opacity:0.7;margin-top:0.5rem" onclick="deleteCurrentSRSCard()" title="Permanently remove this card from your vocab">🗑 Delete this card</button>
+    <div id="srsFlipHint" style="font-size:0.68rem;color:var(--mist)">tap card to reveal — or press <kbd style="font-family:'Manrope',sans-serif;background:var(--papyrus);border:1px solid rgba(0,0,0,0.15);border-radius:3px;padding:0.1rem 0.35rem;font-size:0.65rem">space</kbd></div>
+    <div style="display:flex;gap:0.4rem;justify-content:center;flex-wrap:wrap;margin-top:0.4rem">
+      <button class="ctrl-btn ghost" style="font-size:0.7rem;padding:0.4rem 0.9rem;opacity:0.85" onclick="undoSRS()" title="Undo last rating (or press Z)">↩ Undo</button>
+      <button class="ctrl-btn ghost" style="font-size:0.7rem;padding:0.4rem 0.9rem;opacity:0.75" onclick="deleteCurrentSRSCard()" title="Permanently remove this card from your vocab">🗑 Delete</button>
+    </div>
   `;
 }
 
@@ -2107,7 +2140,13 @@ function renderBrowse() {
   grid.innerHTML = '';
   let totalW=0, totalV=0, totalP=0;
 
-  Object.entries(db.categories).forEach(([cat, items]) => {
+  const catOrder = Object.entries(db.categories).sort((a,b) => {
+    const pri = (k) => k === 'Verbs' ? 0 : k === 'Verb Conjugations' ? 1 : 2;
+    if (pri(a[0]) !== pri(b[0])) return pri(a[0]) - pri(b[0]);
+    return a[0].localeCompare(b[0]);
+  });
+  catOrder.forEach(([cat, items]) => {
+    items = [...items].sort((x, y) => (x.ar || '').localeCompare(y.ar || ''));
     const card = document.createElement('div');
     card.className = 'category-card';
 
@@ -2123,11 +2162,38 @@ function renderBrowse() {
         <span class="cat-count">${items.length}</span>
       </div>
       <div class="cat-items">
-        ${items.map((i, idx)=>`<div class="vocab-row">
-          <span class="vocab-arabic">${i.ar}</span>
-          <span class="vocab-english">${i.en}</span>
-          <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${idx})" title="Remove this word">×</button>
-        </div>`).join('')}
+        ${(() => {
+          const hasVerbGroups = items.some(i => i.verb);
+          if (hasVerbGroups) {
+            const groups = {};
+            items.forEach((i, idx) => {
+              const v = i.verb || '(other)';
+              if (!groups[v]) groups[v] = { items: [], verbEn: i.verbEn || '' };
+              groups[v].items.push({ ...i, _idx: idx });
+            });
+            return Object.entries(groups).map(([verb, g]) => `
+              <div class="verb-group">
+                <div class="verb-group-header" onclick="this.parentElement.classList.toggle('open')">
+                  <span class="verb-infinitive">${verb}</span>
+                  <span class="verb-english">${g.verbEn}</span>
+                  <span class="verb-toggle">▾</span>
+                </div>
+                <div class="verb-conjugations">
+                  ${g.items.map(i => `<div class="vocab-row">
+                    <span class="vocab-arabic">${i.ar}</span>
+                    <span class="vocab-english">${i.en}</span>
+                    <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${i._idx})" title="Remove">×</button>
+                  </div>`).join('')}
+                </div>
+              </div>
+            `).join('');
+          }
+          return items.map((i, idx) => `<div class="vocab-row">
+            <span class="vocab-arabic">${i.ar}</span>
+            <span class="vocab-english">${i.en}</span>
+            <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${idx})" title="Remove this word">×</button>
+          </div>`).join('');
+        })()}
       </div>`;
     grid.appendChild(card);
 
