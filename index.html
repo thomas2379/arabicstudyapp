@@ -180,9 +180,9 @@
     font-family: 'Cairo', sans-serif;
     font-weight: 600;
     color: var(--rust);
-    min-width: 120px;
-    font-size: 0.85rem;
-    direction: rtl;
+    min-width: 140px;
+    font-size: 0.95rem;
+    direction: ltr;
   }
 
   .vocab-english { color: var(--nile); flex: 1; }
@@ -587,6 +587,26 @@
   }
 
   /* DELETE BUTTON */
+    .vocab-edit {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--mist);
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0 0.3rem;
+    margin-left: 0.2rem;
+    transition: opacity 0.15s, color 0.15s, transform 0.15s;
+    font-family: 'Manrope', sans-serif;
+  }
+  .vocab-row:hover .vocab-edit { opacity: 0.55; }
+  .vocab-edit:hover {
+    opacity: 1 !important;
+    color: var(--gold);
+    transform: scale(1.15);
+  }
+
   .vocab-delete {
     opacity: 0;
     background: none;
@@ -1143,12 +1163,12 @@ function initDB() {
     {ar:'Ana bas7a', en:'I wake up', verb:'Yes7a', verbEn:'to wake up'},
     {ar:'Enta betes7a', en:'You (m) wake up', verb:'Yes7a', verbEn:'to wake up'},
     {ar:'Enty betes7y', en:'You (f) wake up', verb:'Yes7a', verbEn:'to wake up'},
-    {ar:'Ana baakhod', en:'I take', verb:'Yeakhod', verbEn:'to take'},
-    {ar:'Enta betakhod', en:'You (m) take', verb:'Yeakhod', verbEn:'to take'},
-    {ar:'Enty betakhody', en:'You (f) take', verb:'Yeakhod', verbEn:'to take'},
-    {ar:'Ana bakhrog', en:'I go out', verb:'Yekhrog', verbEn:'to go out'},
-    {ar:'Enta betokhrog', en:'You (m) go out', verb:'Yekhrog', verbEn:'to go out'},
-    {ar:'Enty betokhrogy', en:'You (f) go out', verb:'Yekhrog', verbEn:'to go out'},
+    {ar:'Ana baakhod', en:'I take', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Enta betakhod', en:'You (m) take', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Enty betakhody', en:'You (f) take', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Ana bakhrog', en:'I go out', verb:'Yokhrog', verbEn:'to go out'},
+    {ar:'Enta betokhrog', en:'You (m) go out', verb:'Yokhrog', verbEn:'to go out'},
+    {ar:'Enty betokhrogy', en:'You (f) go out', verb:'Yokhrog', verbEn:'to go out'},
     {ar:'Ana ba2ra', en:'I read', verb:'Ye2ra', verbEn:'to read'},
     {ar:'Enta bete2ra', en:'You (m) read', verb:'Ye2ra', verbEn:'to read'},
     {ar:'Enty bete2ry', en:'You (f) read', verb:'Ye2ra', verbEn:'to read'},
@@ -1185,9 +1205,9 @@ function initDB() {
     {ar:'Ana bakrah', en:'I hate', verb:'Yekrah', verbEn:'to hate'},
     {ar:'Enta betekrah', en:'You (m) hate', verb:'Yekrah', verbEn:'to hate'},
     {ar:'Howwa beykrah', en:'He hates', verb:'Yekrah', verbEn:'to hate'},
-    {ar:'Ana bawsal', en:'I arrive', verb:'Yewsal', verbEn:'to arrive'},
-    {ar:'Enta betewsal', en:'You (m) arrive', verb:'Yewsal', verbEn:'to arrive'},
-    {ar:'Howwa beyewsal', en:'He arrives', verb:'Yewsal', verbEn:'to arrive'},
+    {ar:'Ana bawsal', en:'I arrive', verb:'YewSal', verbEn:'to arrive'},
+    {ar:'Enta betewsal', en:'You (m) arrive', verb:'YewSal', verbEn:'to arrive'},
+    {ar:'Howwa beyewsal', en:'He arrives', verb:'YewSal', verbEn:'to arrive'},
     {ar:'Ana badres', en:'I study', verb:'Yedres', verbEn:'to study'},
     {ar:'Enta betedres', en:'You (m) study', verb:'Yedres', verbEn:'to study'},
     {ar:'Howwa beydres', en:'He studies', verb:'Yedres', verbEn:'to study'},
@@ -1205,6 +1225,89 @@ function initDB() {
     {ar:'Ana batla3', en:'I go up / leave', verb:'Yetla3', verbEn:'to go up / leave'},
     {ar:'Enta betetla3', en:'You (m) go up / leave', verb:'Yetla3', verbEn:'to go up / leave'},
     {ar:'Howwa beyetla3', en:'He goes up / leaves', verb:'Yetla3', verbEn:'to go up / leave'},
+    // === Added conjugations ===
+    {ar:'Enty beteketby', en:'You (f) write', verb:'Yekteb', verbEn:'to write'},
+    {ar:'Howwa beyes7a', en:'He wakes up', verb:'Yes7a', verbEn:'to wake up'},
+    {ar:'Heyya betes7a', en:'She wakes up', verb:'Yes7a', verbEn:'to wake up'},
+    {ar:'Enta betaakhod', en:'You (m) take', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Enty betaakhody', en:'You (f) take', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Howwa beyaakhod', en:'He takes', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Heyya betaakhod', en:'She takes', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Howwa beyokhrog', en:'He goes out', verb:'Yokhrog', verbEn:'to go out'},
+    {ar:'Heyya betokhrog', en:'She goes out', verb:'Yokhrog', verbEn:'to go out'},
+    {ar:'Ana ba3mel', en:'I do', verb:'Ye3mel', verbEn:'to do'},
+    {ar:'Enta bete3mel', en:'You (m) do', verb:'Ye3mel', verbEn:'to do'},
+    {ar:'Enty bete3mely', en:'You (f) do', verb:'Ye3mel', verbEn:'to do'},
+    {ar:'Howwa beye3mel', en:'He does', verb:'Ye3mel', verbEn:'to do'},
+    {ar:'Heyya bete3mel', en:'She does', verb:'Ye3mel', verbEn:'to do'},
+    {ar:'Ana banaam', en:'I sleep', verb:'Yenaam', verbEn:'to sleep'},
+    {ar:'Enta betnaam', en:'You (m) sleep', verb:'Yenaam', verbEn:'to sleep'},
+    {ar:'Enty betnaamy', en:'You (f) sleep', verb:'Yenaam', verbEn:'to sleep'},
+    {ar:'Howwa beynaam', en:'He sleeps', verb:'Yenaam', verbEn:'to sleep'},
+    {ar:'Heyya betnaam', en:'She sleeps', verb:'Yenaam', verbEn:'to sleep'},
+    {ar:'Enta beterga3', en:'You (m) come back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Enty beterga3y', en:'You (f) come back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Howwa beyrga3', en:'He comes back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Heyya beterga3', en:'She comes back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Ana barkab', en:'I get on', verb:'Yerkab', verbEn:'to get on (bus/car)'},
+    {ar:'Enta beterkab', en:'You (m) get on', verb:'Yerkab', verbEn:'to get on (bus/car)'},
+    {ar:'Enty beterkaby', en:'You (f) get on', verb:'Yerkab', verbEn:'to get on (bus/car)'},
+    {ar:'Howwa beyrkab', en:'He gets on', verb:'Yerkab', verbEn:'to get on (bus/car)'},
+    {ar:'Heyya beterkab', en:'She gets on', verb:'Yerkab', verbEn:'to get on (bus/car)'},
+    {ar:'Ana bageeb', en:'I bring', verb:'Yegeeb', verbEn:'to bring'},
+    {ar:'Enta betgeeb', en:'You (m) bring', verb:'Yegeeb', verbEn:'to bring'},
+    {ar:'Enty betgeeby', en:'You (f) bring', verb:'Yegeeb', verbEn:'to bring'},
+    {ar:'Howwa beygeeb', en:'He brings', verb:'Yegeeb', verbEn:'to bring'},
+    {ar:'Heyya betgeeb', en:'She brings', verb:'Yegeeb', verbEn:'to bring'},
+    {ar:'Ana bagri', en:'I run', verb:'Yegri', verbEn:'to run'},
+    {ar:'Enta betegri', en:'You (m) run', verb:'Yegri', verbEn:'to run'},
+    {ar:'Enty betegry', en:'You (f) run', verb:'Yegri', verbEn:'to run'},
+    {ar:'Howwa beyegri', en:'He runs', verb:'Yegri', verbEn:'to run'},
+    {ar:'Heyya betegri', en:'She runs', verb:'Yegri', verbEn:'to run'},
+    {ar:'Howwa beyeshtaghal', en:'He works', verb:'Yeshtaghal', verbEn:'to work'},
+    {ar:'Heyya beteshtaghal', en:'She works', verb:'Yeshtaghal', verbEn:'to work'},
+    {ar:'Enty beteftary', en:'You (f) have breakfast', verb:'Yeftar', verbEn:'to have breakfast'},
+    {ar:'Howwa beyeftar', en:'He has breakfast', verb:'Yeftar', verbEn:'to have breakfast'},
+    {ar:'Heyya beteftar', en:'She has breakfast', verb:'Yeftar', verbEn:'to have breakfast'},
+    {ar:'Howwa beytghadda', en:'He has lunch', verb:'Yetghadda', verbEn:'to have lunch'},
+    {ar:'Heyya betetghadda', en:'She has lunch', verb:'Yetghadda', verbEn:'to have lunch'},
+    {ar:'Howwa beyt3ash-sha', en:'He has dinner', verb:'Yet3ash-sha', verbEn:'to have dinner'},
+    {ar:'Heyya betet3ash-sha', en:'She has dinner', verb:'Yet3ash-sha', verbEn:'to have dinner'},
+    {ar:'Howwa beyel3ab', en:'He plays', verb:'Yel3ab', verbEn:'to play'},
+    {ar:'Heyya betel3ab', en:'She plays', verb:'Yel3ab', verbEn:'to play'},
+    {ar:'Howwa bey2aabel', en:'He meets', verb:'Ye2aabel', verbEn:'to meet'},
+    {ar:'Heyya bet2aabel', en:'She meets', verb:'Ye2aabel', verbEn:'to meet'},
+    {ar:'Ana ba7tefel', en:'I celebrate', verb:'Ye7tefel', verbEn:'to celebrate'},
+    {ar:'Enta bete7tefel', en:'You (m) celebrate', verb:'Ye7tefel', verbEn:'to celebrate'},
+    {ar:'Enty bete7tefely', en:'You (f) celebrate', verb:'Ye7tefel', verbEn:'to celebrate'},
+    {ar:'Howwa beye7tefel', en:'He celebrates', verb:'Ye7tefel', verbEn:'to celebrate'},
+    {ar:'Heyya bete7tefel', en:'She celebrates', verb:'Ye7tefel', verbEn:'to celebrate'},
+    {ar:'Enty betkhallasy', en:'You (f) finish', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Ana batfarrag 3ala', en:'I watch', verb:'Yetfarrag 3ala', verbEn:'to watch'},
+    {ar:'Enta betetfarrag 3ala', en:'You (m) watch', verb:'Yetfarrag 3ala', verbEn:'to watch'},
+    {ar:'Enty betetfarragy 3ala', en:'You (f) watch', verb:'Yetfarrag 3ala', verbEn:'to watch'},
+    {ar:'Howwa beytfarrag 3ala', en:'He watches', verb:'Yetfarrag 3ala', verbEn:'to watch'},
+    {ar:'Heyya betetfarrag 3ala', en:'She watches', verb:'Yetfarrag 3ala', verbEn:'to watch'},
+    {ar:'Enty betzoory', en:'You (f) visit', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Heyya betzoor', en:'She visits', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Ana ba23od', en:'I sit / stay', verb:'Yo23od', verbEn:'to sit / to stay'},
+    {ar:'Enta beto23od', en:'You (m) sit / stay', verb:'Yo23od', verbEn:'to sit / to stay'},
+    {ar:'Enty beto23ody', en:'You (f) sit / stay', verb:'Yo23od', verbEn:'to sit / to stay'},
+    {ar:'Howwa beyo23od', en:'He sits / stays', verb:'Yo23od', verbEn:'to sit / to stay'},
+    {ar:'Heyya beto23od', en:'She sits / stays', verb:'Yo23od', verbEn:'to sit / to stay'},
+    {ar:'Enty betetla3y', en:'You (f) go up / leave', verb:'Yetla3', verbEn:'to go up / leave'},
+    {ar:'Heyya betetla3', en:'She goes up / leaves', verb:'Yetla3', verbEn:'to go up / leave'},
+    {ar:'Enty betekrahy', en:'You (f) hate', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Heyya betekrah', en:'She hates', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Enty betenaDDafy', en:'You (f) clean', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Heyya betnaDDaf', en:'She cleans', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Enty betewsaly', en:'You (f) arrive', verb:'YewSal', verbEn:'to arrive'},
+    {ar:'Heyya betewsal', en:'She arrives', verb:'YewSal', verbEn:'to arrive'},
+    {ar:'Enty betedresy', en:'You (f) study', verb:'Yedres', verbEn:'to study'},
+    {ar:'Heyya betedres', en:'She studies', verb:'Yedres', verbEn:'to study'},
+    {ar:'Enty beteshtery', en:'You (f) buy', verb:'Yeshtery', verbEn:'to buy'},
+    {ar:'Heyya betshtery', en:'She buys', verb:'Yeshtery', verbEn:'to buy'},
+  
   ]);
 
   // ---- VERBS (infinitives) ----
@@ -1973,6 +2076,7 @@ function renderSRSCard() {
     <div id="srsFlipHint" style="font-size:0.68rem;color:var(--mist)">tap card to reveal — or press <kbd style="font-family:'Manrope',sans-serif;background:var(--papyrus);border:1px solid rgba(0,0,0,0.15);border-radius:3px;padding:0.1rem 0.35rem;font-size:0.65rem">space</kbd></div>
     <div style="display:flex;gap:0.4rem;justify-content:center;flex-wrap:wrap;margin-top:0.4rem">
       <button class="ctrl-btn ghost" style="font-size:0.7rem;padding:0.4rem 0.9rem;opacity:0.85" onclick="undoSRS()" title="Undo last rating (or press Z)">↩ Undo</button>
+      <button class="ctrl-btn ghost" style="font-size:0.7rem;padding:0.4rem 0.9rem;opacity:0.85" onclick="editCurrentSRSCard()" title="Edit this card">✎ Edit</button>
       <button class="ctrl-btn ghost" style="font-size:0.7rem;padding:0.4rem 0.9rem;opacity:0.75" onclick="deleteCurrentSRSCard()" title="Permanently remove this card from your vocab">🗑 Delete</button>
     </div>
   `;
@@ -2182,7 +2286,8 @@ function renderBrowse() {
                   ${g.items.map(i => `<div class="vocab-row">
                     <span class="vocab-arabic">${i.ar}</span>
                     <span class="vocab-english">${i.en}</span>
-                    <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${i._idx})" title="Remove">×</button>
+                    <button class="vocab-edit" onclick="event.stopPropagation(); editVocabAt('${cat.replace(/'/g, "\\'")}', ${i._idx})" title="Edit">✎</button>
+            <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${i._idx})" title="Remove">×</button>
                   </div>`).join('')}
                 </div>
               </div>
@@ -2191,6 +2296,7 @@ function renderBrowse() {
           return items.map((i, idx) => `<div class="vocab-row">
             <span class="vocab-arabic">${i.ar}</span>
             <span class="vocab-english">${i.en}</span>
+            <button class="vocab-edit" onclick="event.stopPropagation(); editVocabAt('${cat.replace(/'/g, "\\'")}', ${idx})" title="Edit">✎</button>
             <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${idx})" title="Remove this word">×</button>
           </div>`).join('');
         })()}
@@ -2335,6 +2441,75 @@ function deleteVocabByValue(arabic, english) {
   const loc = findVocabIndex(arabic, english);
   if (loc) deleteVocabAt(loc.cat, loc.index, true);
 }
+
+function editVocabAt(cat, index) {
+  const items = db.categories[cat];
+  if (!items || index < 0 || index >= items.length) return;
+  const item = items[index];
+  const oldKey = srsKey(item);
+
+  const newAr = prompt('Edit the front (Arabic/Spanish):', item.ar);
+  if (newAr === null) return; // cancelled
+  const newArTrim = newAr.trim();
+  if (!newArTrim) { toast('Front cannot be empty'); return; }
+
+  const newEn = prompt('Edit the back (English):', item.en);
+  if (newEn === null) return; // cancelled
+  const newEnTrim = newEn.trim();
+  if (!newEnTrim) { toast('Back cannot be empty'); return; }
+
+  // No change? bail.
+  if (newArTrim === item.ar && newEnTrim === item.en) {
+    toast('No changes');
+    return;
+  }
+
+  // Update the item in place
+  item.ar = newArTrim;
+  item.en = newEnTrim;
+
+  // If srsKey changed, migrate SRS record
+  const newKey = srsKey(item);
+  if (newKey !== oldKey && srs[oldKey]) {
+    // Check for conflict: an SRS record for newKey may already exist (e.g., duplicate vocab)
+    if (srs[newKey]) {
+      // Keep the one with more reviews
+      if ((srs[oldKey].totalReviews || 0) > (srs[newKey].totalReviews || 0)) {
+        srs[newKey] = srs[oldKey];
+      }
+      // else keep existing srs[newKey]
+    } else {
+      srs[newKey] = srs[oldKey];
+    }
+    delete srs[oldKey];
+    saveSRS(srs);
+  }
+
+  saveDB(db);
+  toast('Card updated');
+
+  // Re-render
+  if (currentTab === 'browse') renderBrowse();
+  if (currentTab === 'review') {
+    renderSRSStats();
+    renderSRSCard();
+    renderWeakWords();
+  }
+}
+
+function editCurrentSRSCard() {
+  if (!srsDueQueue.length || srsCurrentIndex >= srsDueQueue.length) return;
+  const item = srsDueQueue[srsCurrentIndex];
+  const loc = findVocabIndex(item.ar, item.en);
+  if (!loc) { toast('Could not find this card in vocab.'); return; }
+  editVocabAt(loc.cat, loc.index);
+  // Refresh the cached item in the queue so render reflects the edit
+  const updated = db.categories[loc.cat] && db.categories[loc.cat][loc.index];
+  if (updated) srsDueQueue[srsCurrentIndex] = updated;
+  renderSRSCard();
+}
+
+
 
 function deleteCurrentSRSCard() {
   if (!srsDueQueue.length || srsCurrentIndex >= srsDueQueue.length) return;
