@@ -607,6 +607,26 @@
     transform: scale(1.15);
   }
 
+  .vocab-move {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--mist);
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0 0.3rem;
+    margin-left: 0.2rem;
+    transition: opacity 0.15s, color 0.15s, transform 0.15s;
+    font-family: 'Manrope', sans-serif;
+  }
+  .vocab-row:hover .vocab-move { opacity: 0.55; }
+  .vocab-move:hover {
+    opacity: 1 !important;
+    color: var(--gold);
+    transform: scale(1.15);
+  }
+
   .vocab-delete {
     opacity: 0;
     background: none;
@@ -690,6 +710,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -821,6 +842,42 @@ Or just paste raw lesson notes — it'll figure it out."></textarea>
           </label>
         </div>
         <div id="importResult" style="display:none;margin-top:0.75rem" class="info-box"></div>
+
+        <!-- EXCEL IMPORT -->
+        <div class="info-box" style="margin-top:1.25rem">
+          <strong>Import vocab from Excel:</strong> A spreadsheet with two columns — <em>English</em> and <em>Arabic</em> (header row optional). After picking the file you choose which category the words go into (existing or new).
+        </div>
+        <div class="export-box">
+          <div>
+            <div class="export-label">📊 Import Excel</div>
+            <div class="export-sub">.xlsx with English &amp; Arabic columns</div>
+          </div>
+          <label class="ctrl-btn" style="cursor:pointer">
+            Select Excel
+            <input type="file" accept=".xlsx,.xls,.csv" id="excelFileInput" onchange="handleExcelFile(event)" style="display:none">
+          </label>
+        </div>
+
+        <div id="excelPickerArea" style="display:none;margin-top:0.75rem;padding:0.9rem;border:1px solid rgba(200,149,42,0.35);background:var(--card-bg);border-radius:4px">
+          <div style="font-size:0.85rem;margin-bottom:0.6rem"><strong id="excelSummary"></strong></div>
+          <div style="font-size:0.72rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.35rem">Category</div>
+          <select id="excelCatSelect" onchange="onExcelCatChange()" style="font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.55rem 0.7rem;border:1px solid rgba(200,149,42,0.3);border-radius:3px;background:var(--card-bg);color:var(--ink);width:100%;outline:none;margin-bottom:0.5rem"></select>
+          <input type="text" id="excelNewCatName" placeholder="New category name" style="display:none;font-family:'Manrope',sans-serif;font-size:0.78rem;padding:0.55rem 0.7rem;border:1px solid rgba(200,149,42,0.3);border-radius:3px;background:var(--card-bg);color:var(--ink);width:100%;outline:none;margin-bottom:0.5rem">
+          <div style="margin-top:0.4rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="ctrl-btn" onclick="confirmExcelImport()">Add to category</button>
+            <button class="ctrl-btn ghost" onclick="cancelExcelImport()">Cancel</button>
+          </div>
+          <div id="excelPreview" style="margin-top:0.7rem;max-height:140px;overflow:auto;font-size:0.75rem;font-family:'Manrope',sans-serif;color:var(--mist)"></div>
+        </div>
+        <div id="excelResult" style="display:none;margin-top:0.75rem" class="info-box"></div>
+
+        <!-- CLEAN UP MY LESSONS -->
+        <div id="cleanupBox" style="display:none;margin-top:1.25rem;padding:0.9rem;border:1px solid rgba(184,74,44,0.4);background:var(--card-bg);border-radius:4px">
+          <div style="font-size:0.85rem;margin-bottom:0.5rem"><strong>Clean up the &ldquo;My Lessons&rdquo; category</strong></div>
+          <div style="font-size:0.78rem;color:var(--mist);margin-bottom:0.6rem">Moves verbs into <em>Verbs</em>, conjugations into <em>Verb Conjugations</em>, full sentences into a new <em>Phrases</em> category, anything leftover into <em>Other</em>. Junk and duplicates that already exist elsewhere get removed. After this the &ldquo;My Lessons&rdquo; category disappears.</div>
+          <button class="ctrl-btn" onclick="cleanupMyLessons()">Run cleanup</button>
+        </div>
+        <div id="cleanupResult" style="display:none;margin-top:0.75rem" class="info-box"></div>
       </div>
     </div>
   </div>
@@ -1831,7 +1888,8 @@ function showTab(tab) {
   document.querySelectorAll('nav button').forEach((b,i) => {
     b.classList.toggle('active', ['browse','review','upload'][i]===tab);
   });
-  if (tab==='browse') renderBrowse();
+  if (tab==='browse') { renderBrowse(); renderCleanupVisibility(); }
+  if (tab==='upload') renderCleanupVisibility();
   if (tab==='review') initReview();
 }
 
@@ -2237,6 +2295,326 @@ function importData(event) {
 }
 
 // ============================================================
+// EXCEL IMPORT  (.xlsx with English / Arabic columns)
+// ============================================================
+let pendingExcelItems = [];
+
+function handleExcelFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      if (typeof XLSX === 'undefined') {
+        showExcelError('Excel library not loaded yet. Refresh the page and try again.');
+        return;
+      }
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      pendingExcelItems = parseExcelRows(rows);
+      if (!pendingExcelItems.length) {
+        showExcelError('No usable rows found. Make sure the sheet has two columns: English and Arabic.');
+        return;
+      }
+      openExcelCategoryPicker();
+    } catch (err) {
+      console.error(err);
+      showExcelError('Could not read the file. Make sure it\'s a valid .xlsx or .csv.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+}
+
+function parseExcelRows(rows) {
+  if (!rows || !rows.length) return [];
+  // Drop empty rows
+  rows = rows.filter(r => r && (String(r[0]||'').trim() || String(r[1]||'').trim()));
+  if (!rows.length) return [];
+
+  // Decide which column is Arabic / English by sniffing the data.
+  // Default: column 0 = English, column 1 = Arabic.
+  let arCol = 1, enCol = 0;
+  // Skip header row if it clearly says "english"/"arabic"
+  const first = rows[0].map(c => String(c).toLowerCase().trim());
+  if (first.some(c => c === 'english' || c === 'arabic')) {
+    if (first[0] === 'arabic' || first[1] === 'english') { arCol = 0; enCol = 1; }
+    rows = rows.slice(1);
+  } else {
+    // Heuristic: which column has more Arabic-looking content?
+    const arabicScore = (col) => {
+      let s = 0;
+      rows.slice(0, 20).forEach(r => {
+        const v = String(r[col] || '');
+        if (/[؀-ۿ]/.test(v)) s += 2;
+        if (/[37qS27]/.test(v)) s += 1;  // common transliteration markers
+        if (/\b(ana|enta|enty|howwa|heyya|ye|ba|bet|el|essa3a)\b/i.test(v)) s += 1;
+      });
+      return s;
+    };
+    if (arabicScore(0) > arabicScore(1)) { arCol = 0; enCol = 1; }
+  }
+
+  const out = [];
+  const seen = new Set();
+  rows.forEach(r => {
+    const ar = String(r[arCol] || '').trim();
+    const en = String(r[enCol] || '').trim();
+    if (!ar || !en) return;
+    const key = ar.toLowerCase().replace(/\s+/g, '');
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ ar, en });
+  });
+  return out;
+}
+
+function openExcelCategoryPicker() {
+  const box = document.getElementById('excelPickerArea');
+  const sel = document.getElementById('excelCatSelect');
+  const cats = Object.keys(db.categories).sort();
+  sel.innerHTML = cats.map(c => `<option value="${c.replace(/"/g, '&quot;')}">${c}</option>`).join('')
+    + '<option value="__new__">— New category —</option>';
+  // Default to first existing category
+  if (cats.length) sel.value = cats[0];
+  document.getElementById('excelNewCatName').style.display = 'none';
+  document.getElementById('excelNewCatName').value = '';
+  document.getElementById('excelSummary').textContent =
+    `Found ${pendingExcelItems.length} vocab pairs.`;
+  const prev = document.getElementById('excelPreview');
+  prev.innerHTML = '<strong>Preview:</strong><br>' +
+    pendingExcelItems.slice(0, 8).map(i =>
+      `<span style="color:var(--ink)">${escapeHtml(i.ar)}</span> &nbsp;= &nbsp;${escapeHtml(i.en)}`
+    ).join('<br>') +
+    (pendingExcelItems.length > 8 ? `<br><em>… and ${pendingExcelItems.length - 8} more</em>` : '');
+  box.style.display = 'block';
+  document.getElementById('excelResult').style.display = 'none';
+}
+
+function onExcelCatChange() {
+  const sel = document.getElementById('excelCatSelect');
+  const input = document.getElementById('excelNewCatName');
+  input.style.display = (sel.value === '__new__') ? 'block' : 'none';
+  if (sel.value === '__new__') input.focus();
+}
+
+function confirmExcelImport() {
+  const sel = document.getElementById('excelCatSelect');
+  let cat = sel.value;
+  if (cat === '__new__') {
+    cat = document.getElementById('excelNewCatName').value.trim();
+    if (!cat) { toast('Type a category name first'); return; }
+  }
+  if (!pendingExcelItems.length) { toast('Nothing to import'); return; }
+  if (!db.categories[cat]) db.categories[cat] = [];
+  const before = db.categories[cat].length;
+  add(db, cat, pendingExcelItems);
+  const added = db.categories[cat].length - before;
+  const dupes = pendingExcelItems.length - added;
+  saveDB(db);
+
+  const res = document.getElementById('excelResult');
+  res.style.display = 'block';
+  res.innerHTML = `<strong>✓ Added ${added} items</strong> to &ldquo;${escapeHtml(cat)}&rdquo;${dupes > 0 ? ` (${dupes} duplicates skipped)` : ''}.`;
+  document.getElementById('excelPickerArea').style.display = 'none';
+  pendingExcelItems = [];
+  updateNavBadge();
+  if (currentTab === 'browse') renderBrowse();
+  toast(`+${added} items added!`);
+}
+
+function cancelExcelImport() {
+  pendingExcelItems = [];
+  document.getElementById('excelPickerArea').style.display = 'none';
+}
+
+function showExcelError(msg) {
+  const res = document.getElementById('excelResult');
+  res.style.display = 'block';
+  res.textContent = '⚠ ' + msg;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+// ============================================================
+// MOVE VOCAB ITEM TO ANOTHER CATEGORY
+// ============================================================
+function moveVocabAt(fromCat, index) {
+  const items = db.categories[fromCat];
+  if (!items || index < 0 || index >= items.length) return;
+  const item = items[index];
+
+  const cats = Object.keys(db.categories).filter(c => c !== fromCat).sort();
+  const numbered = cats.map((c, i) => `${i + 1}. ${c}`).join('\n');
+  const choice = prompt(
+    `Move "${item.ar}" → "${item.en}" to which category?\n\n` +
+    numbered +
+    `\n\nEnter a number, or type a new category name:`
+  );
+  if (choice === null) return;
+  const trimmed = choice.trim();
+  if (!trimmed) { toast('Cancelled'); return; }
+
+  let target;
+  if (/^\d+$/.test(trimmed)) {
+    const idx = parseInt(trimmed, 10) - 1;
+    if (idx < 0 || idx >= cats.length) { toast('Invalid number'); return; }
+    target = cats[idx];
+  } else {
+    target = trimmed;
+  }
+  if (target === fromCat) { toast('Already in that category'); return; }
+
+  // Add to target (dedup-aware), remove from source
+  if (!db.categories[target]) db.categories[target] = [];
+  const existingKeys = new Set(db.categories[target].map(i => norm(i.ar)));
+  if (!existingKeys.has(norm(item.ar))) {
+    db.categories[target].push(item);
+  }
+  items.splice(index, 1);
+  // If source category is empty AND not a built-in seed, remove it
+  if (items.length === 0) {
+    delete db.categories[fromCat];
+  }
+  saveDB(db);
+  toast(`Moved to "${target}"`);
+  if (currentTab === 'browse') renderBrowse();
+}
+
+// ============================================================
+// CLEAN UP "My Lessons"  — one-time migration
+// ============================================================
+// Heuristic-driven: verb infinitives → Verbs, conjugations → Verb Conjugations,
+// long sentences/dialogue → Phrases (new), single words → Other.
+// Duplicates that already exist elsewhere are dropped.
+function cleanupMyLessons() {
+  const src = db.categories['My Lessons'];
+  if (!src || !src.length) {
+    const res = document.getElementById('cleanupResult');
+    res.style.display = 'block';
+    res.textContent = 'Nothing to clean — &ldquo;My Lessons&rdquo; is empty.';
+    return;
+  }
+  if (!confirm(`Re-organize ${src.length} items currently in "My Lessons"?\n\nVerbs, conjugations, phrases and leftovers will each be moved to their proper category. Duplicates of items that already exist elsewhere will be discarded.`)) return;
+
+  // Build a quick set of all known Arabic strings across other categories so we don't duplicate
+  const knownAr = new Set();
+  Object.entries(db.categories).forEach(([cat, items]) => {
+    if (cat === 'My Lessons') return;
+    items.forEach(i => knownAr.add(norm(i.ar)));
+  });
+
+  // Map of infinitive (lowercase, stripped) -> { en, verb, verbEn } for conjugation linkage
+  const verbsCat = db.categories['Verbs'] || [];
+  const verbIndex = {};
+  verbsCat.forEach(v => { verbIndex[norm(v.ar)] = v; });
+
+  let moved = { 'Verbs': 0, 'Verb Conjugations': 0, 'Phrases': 0, 'Other': 0 };
+  let dropped = 0;
+
+  const ensureCat = (c) => { if (!db.categories[c]) db.categories[c] = []; };
+
+  src.forEach(item => {
+    let ar = (item.ar || '').trim();
+    let en = (item.en || '').trim();
+    if (!ar && !en) { dropped++; return; }
+
+    // --- 1. Drop pure junk (very short / single-character / non-meaningful) ---
+    if (ar.length <= 2 && !/[؀-ۿ]/.test(ar)) { dropped++; return; }
+    if (/^[^\w؀-ۿ]+$/.test(ar)) { dropped++; return; }
+
+    // --- 2. Already known elsewhere? drop ---
+    if (knownAr.has(norm(ar))) { dropped++; return; }
+
+    // --- 3. Verb infinitive?  starts with "Ye/Yo/Ya/Yet/yeT" + en starts with "to " ---
+    const looksInfinitive = /^Y[a-zA-Z]/.test(ar) && /\bto\s/i.test(en);
+    if (looksInfinitive) {
+      ensureCat('Verbs');
+      const cleanEn = en.replace(/^.*?\bto\s/i, 'to ').trim();
+      db.categories['Verbs'].push({ ar: ar, en: cleanEn });
+      knownAr.add(norm(ar));
+      moved['Verbs']++;
+      return;
+    }
+    // Reverse: en starts with verb-like Y* and ar is "to X"
+    const reverseInfinitive = /^Y[a-zA-Z]/.test(en) && /\bto\s/i.test(ar);
+    if (reverseInfinitive) {
+      ensureCat('Verbs');
+      db.categories['Verbs'].push({ ar: en, en: ar.replace(/^.*?\bto\s/i, 'to ').trim() });
+      knownAr.add(norm(en));
+      moved['Verbs']++;
+      return;
+    }
+
+    // --- 4. Verb conjugation?  starts with Ana/Enta/Enty/Howwa/Heyya + a "be-" verb ---
+    const conjMatch = ar.match(/^(Ana|Enta|Enty|Howwa|Heyya|E7na|Entom|Homma)\s+(b\S+)/i);
+    if (conjMatch) {
+      // Try to find which infinitive this comes from
+      const stem = conjMatch[2].toLowerCase()
+        .replace(/^be?t?y?/i, '')   // strip be-/bet-/bey-/bay- prefix
+        .replace(/y$/i, '');         // strip feminine -y suffix
+      const matchedVerb = verbsCat.find(v => {
+        const root = v.ar.replace(/^Y[eoa]?/i, '').toLowerCase();
+        return root && stem.includes(root.slice(0, Math.max(3, root.length - 1)));
+      });
+      ensureCat('Verb Conjugations');
+      const entry = { ar, en };
+      if (matchedVerb) { entry.verb = matchedVerb.ar; entry.verbEn = matchedVerb.en; }
+      db.categories['Verb Conjugations'].push(entry);
+      knownAr.add(norm(ar));
+      moved['Verb Conjugations']++;
+      return;
+    }
+
+    // --- 5. Long sentence / phrase → Phrases ---
+    const wordCount = ar.split(/\s+/).length;
+    const hasPunct = /[?.,!]/.test(ar);
+    if (wordCount >= 3 || hasPunct) {
+      ensureCat('Phrases');
+      db.categories['Phrases'].push({ ar, en });
+      knownAr.add(norm(ar));
+      moved['Phrases']++;
+      return;
+    }
+
+    // --- 6. Everything else → Other ---
+    ensureCat('Other');
+    db.categories['Other'].push({ ar, en });
+    knownAr.add(norm(ar));
+    moved['Other']++;
+  });
+
+  // Empty + remove the My Lessons category
+  delete db.categories['My Lessons'];
+  saveDB(db);
+
+  const res = document.getElementById('cleanupResult');
+  res.style.display = 'block';
+  res.innerHTML =
+    `<strong>✓ Cleanup done.</strong><br>` +
+    Object.entries(moved).filter(([_, n]) => n > 0).map(([k, n]) => `&nbsp;&nbsp;${n} → <strong>${k}</strong>`).join('<br>') +
+    (dropped > 0 ? `<br>&nbsp;&nbsp;${dropped} dropped (junk / already-known duplicates)` : '') +
+    `<br>The &ldquo;My Lessons&rdquo; category has been removed.`;
+  updateNavBadge();
+  renderCleanupVisibility();
+  if (currentTab === 'browse') renderBrowse();
+  toast('My Lessons cleaned up');
+}
+
+// Show the cleanup box only when My Lessons exists
+function renderCleanupVisibility() {
+  const box = document.getElementById('cleanupBox');
+  if (!box) return;
+  box.style.display = (db.categories['My Lessons'] && db.categories['My Lessons'].length) ? 'block' : 'none';
+}
+
+// ============================================================
 // BROWSE
 // ============================================================
 function renderBrowse() {
@@ -2287,6 +2665,7 @@ function renderBrowse() {
                     <span class="vocab-arabic">${i.ar}</span>
                     <span class="vocab-english">${i.en}</span>
                     <button class="vocab-edit" onclick="event.stopPropagation(); editVocabAt('${cat.replace(/'/g, "\\'")}', ${i._idx})" title="Edit">✎</button>
+                    <button class="vocab-move" onclick="event.stopPropagation(); moveVocabAt('${cat.replace(/'/g, "\\'")}', ${i._idx})" title="Move to another category">↪</button>
             <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${i._idx})" title="Remove">×</button>
                   </div>`).join('')}
                 </div>
@@ -2297,6 +2676,7 @@ function renderBrowse() {
             <span class="vocab-arabic">${i.ar}</span>
             <span class="vocab-english">${i.en}</span>
             <button class="vocab-edit" onclick="event.stopPropagation(); editVocabAt('${cat.replace(/'/g, "\\'")}', ${idx})" title="Edit">✎</button>
+            <button class="vocab-move" onclick="event.stopPropagation(); moveVocabAt('${cat.replace(/'/g, "\\'")}', ${idx})" title="Move to another category">↪</button>
             <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${idx})" title="Remove this word">×</button>
           </div>`).join('');
         })()}
@@ -2323,7 +2703,12 @@ function toggleCat(header) {
 // ============================================================
 function processUpload() {
   const text = document.getElementById('pasteInput').value.trim();
-  const cat = document.getElementById('uploadCat').value.trim() || 'My Lessons';
+  const cat = document.getElementById('uploadCat').value.trim();
+  if (!cat) {
+    toast('Pick a category first (the field above the buttons)');
+    document.getElementById('uploadCat').focus();
+    return;
+  }
 
   if (!text) { toast('Nothing to parse'); return; }
 
@@ -2527,6 +2912,7 @@ function deleteCurrentSRSCard() {
 // INIT
 // ============================================================
 renderBrowse();
+renderCleanupVisibility();
 updateNavBadge();
 
 // ============================================================
