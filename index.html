@@ -1097,27 +1097,27 @@ function initDB() {
     {ar:'Shewayya', en:'a little'},
     {ar:'So3’ayyar', en:'small/young'},
     {ar:'Momell', en:'Boring'},
-    {ar:'Barcelona is crowded', en:'Barcelona za7ma'},
-    {ar:'friends (formal) / So7aab  (informal)', en:'AS7aab'},
-    {ar:'friend', en:'Saa7eb'},
-    {ar:'Female friend', en:'Sa7ba'},
-    {ar:'my friend', en:'Sa7bi'},
-    {ar:'language', en:'Lugha'},
-    {ar:'another language', en:'Lugha tanya'},
-    {ar:'do you remember what is?', en:'Faaker ya3ni eh'},
-    {ar:'the money', en:'el floos'},
-    {ar:'woman', en:'Sett'},
-    {ar:'man', en:'Raagel'},
-    {ar:'Do you have a question', en:'3andak so2aal?'},
-    {ar:'but', en:'bass'},
+    {ar:'Barcelona za7ma', en:'Barcelona is crowded'},
+    {ar:'AS7aab', en:'friends (formal) / So7aab  (informal)'},
+    {ar:'Saa7eb', en:'friend'},
+    {ar:'Sa7ba', en:'Female friend'},
+    {ar:'Sa7bi', en:'my friend'},
+    {ar:'Lugha', en:'language'},
+    {ar:'Lugha tanya', en:'another language'},
+    {ar:'Faaker ya3ni eh', en:'do you remember what is?'},
+    {ar:'el floos', en:'the money'},
+    {ar:'Sett', en:'woman'},
+    {ar:'Raagel', en:'man'},
+    {ar:'3andak so2aal?', en:'Do you have a question'},
+    {ar:'bass', en:'but'},
     {ar:'Mosalsal', en:'TV Series'},
     {ar:'Mosalsalaat Teweela', en:'Telenovelas'},
     {ar:'Aflaam/film', en:'movies'},
     {ar:'Wala 7aaga', en:'nothing'},
     {ar:'esh-shaTT', en:'beach'},
     {ar:'Fara7', en:'wedding'},
-    {ar:'or (only in a question)', en:'walla'},
-    {ar:'you were  / I was', en:'Kont'},
+    {ar:'walla', en:'or (only in a question)'},
+    {ar:'Kont', en:'you were  / I was'},
     {ar:'Feeh', en:'there’s'},
     {ar:'Fi', en:'in'},
     {ar:'Feen', en:'where?'},
@@ -1544,6 +1544,46 @@ function norm(s) { return s.toLowerCase().replace(/\s+/g,''); }
 // ============================================================
 let db = initDB();
 let srs = loadSRS();
+
+// One-time data fix: several "Useful Phrases" entries had Arabic/English swapped.
+// This remaps existing review progress from the old (wrong) keys to the corrected
+// keys so no SRS history/streaks are lost when the data is fixed.
+(function migrateSwappedUsefulPhrases(srs) {
+  const remap = [
+    ['Barcelona is crowded', 'Barcelona za7ma'],
+    ['friends (formal) / So7aab  (informal)', 'AS7aab'],
+    ['friend', 'Saa7eb'],
+    ['Female friend', 'Sa7ba'],
+    ['my friend', 'Sa7bi'],
+    ['language', 'Lugha'],
+    ['another language', 'Lugha tanya'],
+    ['do you remember what is?', 'Faaker ya3ni eh'],
+    ['the money', 'el floos'],
+    ['woman', 'Sett'],
+    ['man', 'Raagel'],
+    ['Do you have a question', '3andak so2aal?'],
+    ['but', 'bass'],
+    ['or (only in a question)', 'walla'],
+    ['you were  / I was', 'Kont'],
+  ];
+  let migrated = false;
+  remap.forEach(([oldAr, newAr]) => {
+    const oldKey = norm(oldAr);
+    const newKey = norm(newAr);
+    if (oldKey === newKey || !srs[oldKey]) return;
+    if (srs[newKey]) {
+      if ((srs[oldKey].totalReviews || 0) > (srs[newKey].totalReviews || 0)) {
+        srs[newKey] = srs[oldKey];
+      }
+    } else {
+      srs[newKey] = srs[oldKey];
+    }
+    delete srs[oldKey];
+    migrated = true;
+  });
+  if (migrated) saveSRS(srs);
+})(srs);
+
 let meta = loadMeta();
 let currentTab = 'browse';
 
@@ -1797,9 +1837,17 @@ function showTab(tab) {
 // ============================================================
 // REVIEW (SRS)
 // ============================================================
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function initReview(unlimited = false) {
   srsUnlimited = unlimited;
-  srsDueQueue = getDueItems(unlimited, srsCategory).sort((a,b) => srsKey(a).localeCompare(srsKey(b)));
+  srsDueQueue = shuffleArray(getDueItems(unlimited, srsCategory));
   srsCurrentIndex = 0;
   srsSessionDone = 0;
   srsSessionTotal = srsDueQueue.length;
