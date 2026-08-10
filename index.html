@@ -874,7 +874,7 @@ const DB_KEY = 'masri_vocab_v2';
 const SRS_KEY = 'masri_srs_v2';
 const META_KEY = 'masri_meta_v2';
 const VOCAB_VERSION_KEY = 'masri_vocab_version';
-const CURRENT_VOCAB_VERSION = 7; // reset to Excel source, structured verbs // bump this each time vocab is updated
+const CURRENT_VOCAB_VERSION = 10; // v10: merged Directions into Maps, Numbers sorted numerically, Maps keeps insertion order instead of alphabetical // bump this each time vocab is updated
 
 function loadDB() {
   try { const r = localStorage.getItem(DB_KEY); if (r) return JSON.parse(r); } catch(e) {}
@@ -899,13 +899,45 @@ function saveMeta(m) { saveMetaLocal(m); queueCloudSync(); }
 
 function initDB() {
   const existing = loadDB();
+  const storedVersion = parseInt(localStorage.getItem(VOCAB_VERSION_KEY), 10);
+  const alreadySeeded = existing && !isNaN(storedVersion) && storedVersion === CURRENT_VOCAB_VERSION;
+
+  if (alreadySeeded) {
+    // Vocab was already seeded at this version: this is a normal page load,
+    // not a fresh install or a version bump. Return the saved data as-is so
+    // anything the person added (Excel import, backup import, paste) survives.
+    return existing;
+  }
+
   const db = existing || { categories: {} };
 
-  // Reset to Excel source vocab
-  db.categories = {};
+  // Migrate old category names into their new consolidated names, so people
+  // who already had data under the old names don't end up with duplicate
+  // categories once the seed below starts adding under the new names.
+  const CATEGORY_RENAMES = {
+    'Telling Time': 'Days & Time',
+    'Address': 'Maps',
+    'Travel': 'Maps',
+    'Places & Stores': 'Maps',
+    'Places, Transport & City': 'Maps',
+    'Directions': 'Maps',
+    'Adjectives & Descriptive Words': 'Adjectives',
+    'Miscellaneous Vocab': 'Other',
+  };
+  Object.entries(CATEGORY_RENAMES).forEach(([oldName, newName]) => {
+    if (db.categories[oldName]) {
+      add(db, newName, db.categories[oldName]);
+      delete db.categories[oldName];
+    }
+  });
+
+  // Merge the built-in seed vocab into whatever the person already has.
+  // add() skips duplicates by Arabic key, so this only fills in categories/
+  // words that aren't there yet: it never wipes existing categories, custom
+  // imports, or edits, even on a version bump.
 
   // ---- DIRECTIONS ----
-  add(db, 'Directions', [
+  add(db, 'Maps', [
     {ar:'Yemshi', en:'to walk'},
     {ar:'Emshi 3ala Tool', en:'walk straight ahead'},
     {ar:'Yemeen', en:'right'},
@@ -964,7 +996,7 @@ function initDB() {
   ]);
 
   // ---- ADDRESS ----
-  add(db, 'Address', [
+  add(db, 'Maps', [
     {ar:'Shaare3', en:'street'},
     {ar:'3omaara/3emaara', en:'apartment building'},
     {ar:'Sha22a', en:'apartment'},
@@ -1000,7 +1032,7 @@ function initDB() {
   ]);
 
   // ---- TELLING TIME ----
-  add(db, 'Telling Time', [
+  add(db, 'Days & Time', [
     {ar:'3ashara bezzabT', en:'10:00 (exactly)'},
     {ar:'3ashara w khamsa', en:'10:05'},
     {ar:'3ashara w 3ashra', en:'10:10'},
@@ -1024,23 +1056,14 @@ function initDB() {
 
   // ---- USEFUL PHRASES ----
   add(db, 'Useful Phrases', [
-    {ar:'(7arr) aktar', en:'more (hot)'},
     {ar:'Ezzay a2ool?', en:'How do I say …..?'},
     {ar:'ya3ni eh ….. ?', en:'What is the meaning of ….?'},
     {ar:'2ool/y taan/y, law sama7t/y', en:'say that again'},
-    {ar:'Waageb', en:'homework'},
-    {ar:'maashy', en:'ok'},
-    {ar:'eh', en:'what'},
-    {ar:'taany', en:'again'},
     {ar:'Enty mnaeen ya fatima?', en:'always when speaking to a person'},
-    {ar:'Fain (fien NL)', en:'where'},
-    {ar:'Agaaza', en:'vacation / day off'},
     {ar:'Ezzay el Christmas?  Kan kwayes', en:'How was xmas. It was good.'},
     {ar:'Enta bet7eb …..?', en:'Do you like …..?'},
     {ar:'Aywa, Ana ba7eb el- khookh', en:'Yes, I like peach'},
-    {ar:'mish', en:'Not'},
     {ar:'Ana aasef', en:'I am sorry (a guy speaking)'},
-    {ar:'Ma3lesh', en:'sorry (lighter, less serious)'},
     {ar:'Mafeesh moshkela', en:'there\'s no problem'},
     {ar:'Meen da?', en:'Who is this? M'},
     {ar:'Meen dy?', en:'Who is this? F'},
@@ -1055,46 +1078,59 @@ function initDB() {
     {ar:'dars gedeed', en:'a new lesson'},
     {ar:'Ba3d eddars', en:'after the lesson'},
     {ar:'Badry awi!', en:'very early'},
-    {ar:'esh-sho3\'l', en:'(the) work/job'},
-    {ar:'7afla', en:'party / concert'},
-    {ar:'mabsooT/a', en:'happy'},
     {ar:'3ayez asma3 taany', en:'I want to listen again'},
     {ar:'Howwa 3aayez eh?', en:'What does he want?'},
     {ar:'Be khamsa geneeh', en:'it’s 5 pounds'},
-    {ar:'bekaam?', en:'how much (price)'},
     {ar:'Koll sana wenta Tayyeb', en:'happy birthday'},
-    {ar:'leh?', en:'why?'},
     {ar:'2ool/y taany?', en:'say that again'},
-    {ar:'ma3 (sa7bety)', en:'with (my friend)'},
     {ar:'Min tes3a le khamsa', en:'from 9 to 5'},
     {ar:'film gameel', en:'good film'},
     {ar:'Fi colombia', en:'In colombia'},
     {ar:'Film adeem', en:'old movie'},
     {ar:'Film gedeed', en:'new movie'},
-    {ar:'7elw', en:'good/beautiful'},
     {ar:'7elw awi', en:'interesting'},
+    {ar:'Barcelona za7ma', en:'Barcelona is crowded'},
+    {ar:'Lugha tanya', en:'another language'},
+    {ar:'Faaker ya3ni eh', en:'do you remember what is?'},
+    {ar:'el floos', en:'the money'},
+    {ar:'3andak so2aal?', en:'Do you have a question'},
+    {ar:'Mosalsalaat Teweela', en:'Telenovelas'},
+    {ar:'Wala 7aaga', en:'nothing'},
+  ]);
+
+  // ---- OTHER (single standalone words, not full phrases) ----
+  add(db, 'Other', [
+    {ar:'(7arr) aktar', en:'more (hot)'},
+    {ar:'Waageb', en:'homework'},
+    {ar:'maashy', en:'ok'},
+    {ar:'eh', en:'what'},
+    {ar:'taany', en:'again'},
+    {ar:'Fain (fien NL)', en:'where'},
+    {ar:'Agaaza', en:'vacation / day off'},
+    {ar:'mish', en:'Not'},
+    {ar:'Ma3lesh', en:'sorry (lighter, less serious)'},
+    {ar:'esh-sho3\'l', en:'(the) work/job'},
+    {ar:'7afla', en:'party / concert'},
+    {ar:'mabsooT/a', en:'happy'},
+    {ar:'bekaam?', en:'how much (price)'},
+    {ar:'leh?', en:'why?'},
+    {ar:'ma3 (sa7bety)', en:'with (my friend)'},
+    {ar:'7elw', en:'good/beautiful'},
     {ar:'keteer', en:'a lot'},
     {ar:'ba3dain', en:'then'},
     {ar:'Shewayya', en:'a little'},
     {ar:'So3’ayyar', en:'small/young'},
     {ar:'Momell', en:'Boring'},
-    {ar:'Barcelona za7ma', en:'Barcelona is crowded'},
     {ar:'AS7aab', en:'friends (formal) / So7aab  (informal)'},
     {ar:'Saa7eb', en:'friend'},
     {ar:'Sa7ba', en:'Female friend'},
     {ar:'Sa7bi', en:'my friend'},
     {ar:'Lugha', en:'language'},
-    {ar:'Lugha tanya', en:'another language'},
-    {ar:'Faaker ya3ni eh', en:'do you remember what is?'},
-    {ar:'el floos', en:'the money'},
     {ar:'Sett', en:'woman'},
     {ar:'Raagel', en:'man'},
-    {ar:'3andak so2aal?', en:'Do you have a question'},
     {ar:'bass', en:'but'},
     {ar:'Mosalsal', en:'TV Series'},
-    {ar:'Mosalsalaat Teweela', en:'Telenovelas'},
     {ar:'Aflaam/film', en:'movies'},
-    {ar:'Wala 7aaga', en:'nothing'},
     {ar:'esh-shaTT', en:'beach'},
     {ar:'Fara7', en:'wedding'},
     {ar:'walla', en:'or (only in a question)'},
@@ -1422,7 +1458,7 @@ function initDB() {
   ]);
 
   // ---- TRAVEL ----
-  add(db, 'Travel', [
+  add(db, 'Maps', [
     {ar:'Tayyara', en:'plane/ flight'},
     {ar:'Ustaaz', en:'Mr'},
     {ar:'eDDohr', en:'afternoon'},
@@ -1482,7 +1518,7 @@ function initDB() {
   ]);
 
   // ---- PLACES & STORES ----
-  add(db, 'Places & Stores', [
+  add(db, 'Maps', [
     {ar:'khareeTa', en:'map'},
     {ar:'Mostashfa', en:'hospital'},
     {ar:'Gam3a', en:'university'},
@@ -1500,6 +1536,218 @@ function initDB() {
     {ar:'Saydaleyya', en:'pharmacy'},
     {ar:'Cafeteria', en:'café'},
     {ar:'Banzeena', en:'petrol station'},
+  ]);
+
+  // ---- NEW VOCAB (from Excel/Word source review) ----
+  add(db, 'Greetings & Basics', [
+    {ar:'Ezzayak?', en:'How are you?'},
+    {ar:'Ana kwayyes', en:'I am fine'},
+    {ar:'el-7amdu -lellah', en:'thank God'},
+    {ar:'W enty?', en:'And you? (f)'},
+    {ar:'Esmak eh?', en:'What\'s your name?'},
+    {ar:'Ahlan wa sahlan', en:'nice to meet you / welcome to my house'},
+    {ar:'Ahlan beek', en:'(m) talking to a man'},
+    {ar:'Ahlan beeky', en:'(m) talking to a woman'},
+    {ar:'Shukran', en:'thank you'},
+    {ar:'Enta min_ain?', en:'Where are you from (m)'},
+    {ar:'Min', en:'from'},
+    {ar:'Ain', en:'where (MSA)'},
+    {ar:'Fain', en:'where (Egy)'},
+    {ar:'Enty min_ain?', en:'Where are you from (f)'},
+    {ar:'Masr', en:'Egypt'},
+    {ar:'Howwa', en:'He'},
+    {ar:'Heyya', en:'she'},
+    {ar:'Sabaa7 el-khair (sabach el geir NL)', en:'good morning'},
+    {ar:'Sabaa7 en-noor', en:'good morning (reply)'},
+    {ar:'Sabaa7', en:'morning'},
+    {ar:'Noor', en:'light'},
+    {ar:'Enta saaken fain?', en:'Where do you live? (m)'},
+    {ar:'Saaken', en:'living (m)'},
+    {ar:'Saakna', en:'living (f)'},
+    {ar:'Enty saakna fain?', en:'Where do you live? (f)'},
+    {ar:'3andy', en:'I have'},
+    {ar:'Aywa', en:'yes'},
+    {ar:'La2 (laa-a)', en:'No'},
+    {ar:'Masaa el-khair', en:'good evening'},
+    {ar:'Masaa en-noor', en:'good evening'},
+    {ar:'7aDretak', en:'you (formal)'},
+    {ar:'Ana asfa', en:'I am sorry (a girl speaking)'},
+    {ar:'Walad', en:'boy'},
+    {ar:'Meen?', en:'who?'},
+    {ar:'Ma3a essalaama', en:'goodbye'},
+    {ar:'En shaallah', en:'hopefully'},
+    {ar:'Eh el akhbaar?', en:'What is the news? / how is it going?'},
+    {ar:'yaah!', en:'oh!'},
+    {ar:'Tayyeb', en:'kind (in general)'},
+    {ar:'Mesh keda?', en:'Aren\'t you? / correct? (question tail)'},
+    {ar:'Mabrook', en:'congrats'},
+    {ar:'Nafs el…..', en:'The same ….'},
+  ]);
+
+  add(db, 'Verbs', [
+    {ar:'baTbokh', en:'to cook'},
+    {ar:'Ye3raf', en:'to know'},
+    {ar:'3ereft', en:'you knew'},
+    {ar:'Yesaafer', en:'to travel'},
+    {ar:'Yetghayyar', en:'to change'},
+    {ar:'Banzel', en:'to go downstairs / to go out of somewhere (fysically leave the place at that moment)'},
+    {ar:'Badkhol', en:'I enter (a place) at that moment'},
+    {ar:'Yezaaker', en:'to study for exams'},
+    {ar:'bada2t', en:'I started'},
+    {ar:'Baakhod dosh-sh', en:'I take a shower'},
+    {ar:'Betes7y badry awi keda?', en:'Do you wake up that early'},
+    {ar:'Ezzaay 3erefteeh/a?', en:'How did you know him/her?'},
+    {ar:'Bageeb akl', en:'I get food / I buy food'},
+    {ar:'Enta shaayef eh?', en:'What do you think?'},
+    {ar:'Bete3mel', en:'you do'},
+    {ar:'Benroo7', en:'we go'},
+    {ar:'Beyroo7o', en:'they go'},
+    {ar:'betwSal', en:'you arrive'},
+    {ar:'Raaye7', en:'I/you(m) am going (at the moment)'},
+    {ar:'Gay/a', en:'I\'m coming'},
+    {ar:'Yaakhod agaaza', en:'to take a vacation'},
+    {ar:'3eref', en:'to know (past tense)'},
+  ]);
+
+  add(db, 'Numbers', [
+    {ar:'Kamsa w 3eshreen', en:'25'},
+    {ar:'tamanya w 3eshreen', en:'28'},
+    {ar:'talaata w talateen', en:'33'},
+    {ar:'Meyya w khamsa w 3eshreen', en:'125'},
+    {ar:'alf tes3omeyya w tesa3taashar', en:'1919'},
+  ]);
+
+  add(db, 'Days & Time', [
+    {ar:'Bellail', en:'at night'},
+    {ar:'Wa2t', en:'time'},
+    {ar:'beZZbT', en:'exactly'},
+    {ar:'maZboot', en:'exact / on time'},
+    {ar:'Betroo7 esh-shoghl essaa3a kaam?', en:'What time do you go to work'},
+    {ar:'El-gam3a kamaan essa3a tes3a', en:'9:00'},
+    {ar:'3aa3ty mish mazbooTa', en:'my watch is not on time'},
+    {ar:'Nemt essaa3a 3 eSSob7', en:'I went to sleep at 3 am'},
+  ]);
+
+  add(db, 'Family', [
+    {ar:'Akhooya', en:'my brother'},
+    {ar:'Saa7ebko', en:'your (pl) friend (m/sing)'},
+    {ar:'Sa7bety', en:'my female friend'},
+    {ar:'7amaaya', en:'my father in law'},
+    {ar:'7amaati', en:'my mother in law'},
+    {ar:'SaDeeQ/a', en:'a friend (formal)'},
+    {ar:'Marretain', en:'twice'},
+    {ar:'Hedeyya', en:'gift'},
+    {ar:'Saa7eb akhooya', en:'the friend of my brother'},
+    {ar:'Fara7o kaan henaak', en:'his wedding was there'},
+    {ar:'Gawaaz', en:'marriage'},
+    {ar:'3eed gawaaz', en:'marriage anniversary'},
+  ]);
+
+  add(db, 'Maps', [
+    {ar:'el 7okooma', en:'government'},
+    {ar:'MowaZZaf/a', en:'employee'},
+    {ar:'7okoomy', en:'government'},
+    {ar:'El Qaahira', en:'Cairo'},
+    {ar:'Madina', en:'city'},
+    {ar:'Any madeena?', en:'Which city?'},
+    {ar:'3arabeyya', en:'car'},
+    {ar:'Autobees', en:'bus'},
+    {ar:'3agala', en:'bike (fiets)'},
+    {ar:'Motosykle', en:'motor bike'},
+    {ar:'ATr', en:'train'},
+    {ar:'El fondo2', en:'the hotel'},
+    {ar:'Mamarr', en:'hallway'},
+    {ar:'Naady', en:'sports club'},
+    {ar:'Markeb', en:'boat'},
+    {ar:'Makaan', en:'place'},
+    {ar:'Bel3agala', en:'by bike'},
+    {ar:'Ganb baity', en:'next to my house'},
+    {ar:'Awwel yemeen', en:'first street to the right'},
+  ]);
+
+  add(db, 'Weather', [
+    {ar:'El gaww', en:'the weather'},
+    {ar:'A7arr', en:'hotter'},
+    {ar:'eSSaif', en:'summer'},
+    {ar:'Shamaal', en:'north'},
+    {ar:'Daraget el 7araara', en:'temperature'},
+  ]);
+
+  add(db, 'Store & Shopping', [
+    {ar:'Momken adfa3 bel visa?', en:'Can I pay with the card?'},
+    {ar:'La2, laazem cash', en:'no, it has to be cash'},
+    {ar:'Cash bass', en:'only cash'},
+    {ar:'Badry', en:'early'},
+    {ar:'Yoonaany', en:'Greek'},
+    {ar:'Koll', en:'every'},
+    {ar:'Bashtery ward', en:'I buy flowers'},
+    {ar:'El 7esaab toltomeyya w 3eshreen', en:'320 geneeh'},
+    {ar:'Akl', en:'food'},
+    {ar:'Ahwa', en:'coffee'},
+  ]);
+
+  add(db, 'Career & Work', [
+    {ar:'Beteshtaghal eh?', en:'What do you do for work?'},
+    {ar:'Ana bashtaghal fi sherket estesmaraat', en:'I work in investment company'},
+    {ar:'Sherka', en:'company'},
+    {ar:'Estesmaraat', en:'investments'},
+    {ar:'Mohandes', en:'Engineer'},
+    {ar:'Saydaly/a', en:'pharmacist'},
+    {ar:'MomarreD/a', en:'nurse'},
+    {ar:'WaZeefa', en:'Job'},
+    {ar:'mo7aDra', en:'lecture (university class)'},
+    {ar:'Mostawaa', en:'level'},
+    {ar:'el wa2t elfaaDy', en:'free time'},
+    {ar:'reyaDeyyat', en:'maths'},
+    {ar:'reyaDa', en:'sports / maths'},
+    {ar:'Madrasa', en:'school'},
+    {ar:'Tasweer', en:'photographing/ recording videos'},
+  ]);
+
+  add(db, 'Adjectives', [
+    {ar:'Ghaaly', en:'expensive'},
+    {ar:'Rekhees/a', en:'cheap'},
+    {ar:'Taweel/a', en:'tall'},
+    {ar:'2oSayyar/a', en:'short'},
+    {ar:'shedeed/a', en:'strict'},
+    {ar:'Ghany-ya', en:'rich'},
+    {ar:'Mota7ammes/a', en:'excited'},
+    {ar:'We7esh', en:'/ we7sha bad/ ugly'},
+    {ar:'3aali/a', en:'high'},
+    {ar:'A2all', en:'less'},
+    {ar:'kebeer', en:'big'},
+  ]);
+
+  add(db, 'Other', [
+    {ar:'Azra2', en:'blue'},
+    {ar:'Kalb', en:'dog'},
+    {ar:'Koora', en:'ball'},
+    {ar:'Salla', en:'basket'},
+    {ar:'3arD', en:'show'},
+    {ar:'3arD Toyoor', en:'bird show'},
+    {ar:'Naas', en:'people'},
+    {ar:'Kaan', en:'was'},
+    {ar:'Kaan feeh', en:'there was/ were'},
+    {ar:'Ma7abbetsh ….', en:'I didn\'t like (past)'},
+    {ar:'El 3aks', en:'the opposite'},
+    {ar:'aZun', en:'I think (opinion)'},
+    {ar:'Mo2tamar', en:'conference'},
+    {ar:'Fa', en:'so'},
+    {ar:'Tadreeb', en:'exercise'},
+    {ar:'Ana atchan', en:'I\'m thirsty'},
+    {ar:'doorak', en:'your turn (m)'},
+    {ar:'7agaat keteer', en:'many things'},
+    {ar:'Modon', en:'cities'},
+    {ar:'A7yanan', en:'sometimes'},
+    {ar:'bel vanilia', en:'with vanilia'},
+    {ar:'3eed el Qeyaama', en:'Easter'},
+    {ar:'Sham enneseem', en:'Spring day (a week after easter)'},
+    {ar:'Bete3melo eh fi Holanda fi el Easter?', en:'What do you (pl) do in Easter in Holland?'},
+    {ar:'Benaakol ma3 el 3eela', en:'We eat with the family'},
+    {ar:'Shoft film ma3 sa7bety', en:'I saw a film with my friend'},
+    {ar:'Fi anhi door?', en:'In which floor?'},
+    {ar:'3eed el Om', en:'mother\'s day'},
+    {ar:'Sha22a gedeeda', en:'a new apartment'},
   ]);
 
   saveDB(db);
@@ -2444,7 +2692,7 @@ function confirmExcelImport() {
   document.getElementById('excelPickerArea').style.display = 'none';
   pendingExcelItems = [];
   updateNavBadge();
-  if (currentTab === 'browse') renderBrowse();
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
   toast(`+${totalAdded} items added!`);
 }
 
@@ -2507,7 +2755,7 @@ function moveVocabAt(fromCat, index) {
   }
   saveDB(db);
   toast(`Moved to "${target}"`);
-  if (currentTab === 'browse') renderBrowse();
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
 }
 
 // ============================================================
@@ -2626,7 +2874,7 @@ function cleanupMyLessons() {
     `<br>The &ldquo;My Lessons&rdquo; category has been removed.`;
   updateNavBadge();
   renderCleanupVisibility();
-  if (currentTab === 'browse') renderBrowse();
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
   toast('My Lessons cleaned up');
 }
 
@@ -2651,13 +2899,28 @@ function renderBrowse() {
     return a[0].localeCompare(b[0]);
   });
   catOrder.forEach(([cat, items]) => {
-    items = [...items].sort((x, y) => (x.ar || '').localeCompare(y.ar || ''));
+    if (cat === 'Numbers') {
+      // Sort numerically (0,1,2...100,125,1919), not alphabetically.
+      // Ordinal words (first, second...) have no digit value, so they sort to the end.
+      items = [...items].sort((x, y) => {
+        const nx = /^\d+$/.test(x.en) ? parseInt(x.en, 10) : Infinity;
+        const ny = /^\d+$/.test(y.en) ? parseInt(y.en, 10) : Infinity;
+        return nx - ny;
+      });
+    } else if (cat === 'Maps') {
+      // Keep insertion order so merged sub-groups (Directions, Address, Travel...)
+      // stay together as blocks instead of getting shuffled alphabetically.
+    } else {
+      items = [...items].sort((x, y) => (x.ar || '').localeCompare(y.ar || ''));
+    }
     const card = document.createElement('div');
     card.className = 'category-card';
 
     const colorMap = {
       'Verbs':'#B84A2C','Numbers':'#C8952A','Greetings & Basics':'#1A3A4A',
       'Weather':'#4A6741','Food & Shopping':'#7A4A1A','Classroom':'#2A4A6A',
+      'Career & Work':'#5A3A6A','Adjectives & Descriptive Words':'#6A2A3A',
+      'Other':'#4A4A4A',
     };
     const color = colorMap[cat] || '#5A5A4A';
 
@@ -2762,7 +3025,7 @@ function deleteVocabAt(cat, index, fromWeak) {
   toast(`Removed: ${item.ar}`);
 
   // Re-render whatever view they're on
-  if (currentTab === 'browse') renderBrowse();
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
   if (currentTab === 'review') {
     // Rebuild queue in case the deleted card was in it
     srsDueQueue = srsDueQueue.filter(q => srsKey(q) !== key);
@@ -2834,7 +3097,7 @@ function editVocabAt(cat, index) {
   toast('Card updated');
 
   // Re-render
-  if (currentTab === 'browse') renderBrowse();
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
   if (currentTab === 'review') {
     renderSRSStats();
     renderSRSCard();
@@ -2987,9 +3250,8 @@ async function initCloud() {
 
         if (changed || newAdded > 0) {
           // Re-render whichever tab is active
-          if (currentTab === 'browse') renderBrowse();
-          else if (currentTab === 'review') initReview();
-          renderBrowse(); // also refresh totals
+          if (currentTab === 'review') initReview();
+          renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
           updateNavBadge();
         }
 
