@@ -733,7 +733,7 @@
 <nav>
   <button class="active" onclick="showTab('browse')">Browse</button>
   <button onclick="showTab('review')">Flashcards <span id="navDueBadge" style="display:none;background:var(--rust);color:white;border-radius:10px;padding:0.1rem 0.4rem;font-size:0.65rem;margin-left:0.3rem"></span></button>
-  <button onclick="showTab('upload')">+ Add / Export</button>
+  <button onclick="showTab('upload')">Export / Import</button>
 </nav>
 
 <main>
@@ -794,32 +794,10 @@
 
   <!-- UPLOAD TAB -->
   <div id="tab-upload" style="display:none">
-    <div class="section-title">Add Material</div>
     <div class="upload-area">
-      <div class="info-box">
-        <strong>How it works:</strong> Paste vocabulary or sentences in any format — your lesson notes, word lists, verb conjugations. Claude will parse it and add new items without duplicates. 
-        Accepted formats: <em>Arabic = English</em>, <em>English — Arabic</em>, plain word lists, or sentence pairs.
-      </div>
-      <div>
-        <div style="font-size:0.72rem;color:var(--mist);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em;">Paste your lesson content</div>
-        <textarea class="paste-area" id="pasteInput" placeholder="e.g.
-Ketaab = book
-Sa7ba = female friend
-Ana baroo7 el gym = I go to the gym
-
-Or just paste raw lesson notes — it'll figure it out."></textarea>
-      </div>
-      <div style="font-size:0.72rem;color:var(--mist)">Category (optional):</div>
-      <input type="text" id="uploadCat" placeholder="e.g. Lesson 5, Food, Body parts..." 
-        style="font-family:'Manrope',sans-serif;font-size:0.78rem;padding:0.6rem 0.9rem;border:1px solid rgba(200,149,42,0.3);border-radius:3px;background:var(--card-bg);color:var(--ink);width:100%;outline:none">
-      <div class="upload-actions">
-        <button class="ctrl-btn" onclick="processUpload()">Parse & Add</button>
-        <button class="ctrl-btn ghost" onclick="document.getElementById('pasteInput').value=''">Clear</button>
-      </div>
-      <div id="uploadResult" style="display:none" class="info-box"></div>
 
       <!-- EXPORT / IMPORT -->
-      <div style="margin-top:1rem">
+      <div>
         <div class="section-title" style="font-size:1.1rem">Export & Import</div>
         <div class="info-box" style="margin-bottom:1rem">
           <strong>Save your data:</strong> Export downloads a JSON file with all your vocab <em>and</em> SRS progress. When you get a new version of the app, import that file to pick up exactly where you left off — no data lost.
@@ -2746,69 +2724,6 @@ function toggleCat(header) {
 // ============================================================
 // UPLOAD / PARSE
 // ============================================================
-function processUpload() {
-  const text = document.getElementById('pasteInput').value.trim();
-  const cat = document.getElementById('uploadCat').value.trim();
-  if (!cat) {
-    toast('Pick a category first (the field above the buttons)');
-    document.getElementById('uploadCat').focus();
-    return;
-  }
-
-  if (!text) { toast('Nothing to parse'); return; }
-
-  const lines = text.split('\n').map(l=>l.trim()).filter(l=>l.length > 1);
-  const parsed = [];
-  const patterns = [
-    /^(.+?)\s*[=→\-–—:]\s*(.+)$/,
-    /^(.+?)\s+\/\s+(.+)$/,
-  ];
-
-  lines.forEach(line => {
-    // skip pure headers/decorative lines
-    if (/^[_\-=*#]+$/.test(line)) return;
-    if (line.startsWith('//') || line.startsWith('#')) return;
-
-    for (const pat of patterns) {
-      const m = line.match(pat);
-      if (m) {
-        const a = m[1].trim(), b = m[2].trim();
-        if (a.length>0 && b.length>0 && a.length<80 && b.length<120) {
-          // guess which side is Arabic (contains Arabic chars or common transliteration markers)
-          const hasArabicScript = /[\u0600-\u06FF]/.test(a);
-          const looksTranslit = /[37q2]/i.test(a) || /\b(ana|enta|enty|howwa|heyya|ye|ba|bet)\b/i.test(a);
-          if (hasArabicScript || looksTranslit || !/^[a-zA-Z\s\.,!?'"\-]+$/.test(b)) {
-            parsed.push({ar: a, en: b});
-          } else {
-            parsed.push({ar: b, en: a});
-          }
-          return;
-        }
-      }
-    }
-  });
-
-  if (!parsed.length) {
-    const res = document.getElementById('uploadResult');
-    res.style.display = 'block';
-    res.textContent = '⚠ Could not parse any pairs. Try format: Arabic = English or English — Arabic';
-    return;
-  }
-
-  if (!db.categories[cat]) db.categories[cat] = [];
-  const before = db.categories[cat].length;
-  add(db, cat, parsed);
-  const added = db.categories[cat].length - before;
-  const dupes = parsed.length - added;
-  saveDB(db);
-
-  const res = document.getElementById('uploadResult');
-  res.style.display = 'block';
-  res.innerHTML = `<strong>✓ Added ${added} new items</strong> to "${cat}"${dupes>0?` (${dupes} duplicates skipped)`:''}`;
-  document.getElementById('pasteInput').value = '';
-  toast(`+${added} items added!`);
-}
-
 // ============================================================
 // TOAST
 // ============================================================
