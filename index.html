@@ -3236,9 +3236,14 @@ async function initCloud() {
         }
         localStorage.setItem(LAST_MODIFIED_KEY, cloudTime.toString());
 
-        // Re-merge built-in vocab from this HTML version (in case new vocab was added)
-        // initDB() skips duplicates by srsKey, so SRS progress on existing cards is preserved.
+        // Re-merge built-in vocab from this HTML version (in case new vocab was added).
+        // Clear the version marker first so initDB() doesn't skip the merge just
+        // because this browser already ran it once earlier in the same page load
+        // (the cloud data we just adopted may be from an older, unmerged version).
+        // add() only adds missing items, so this never touches SRS progress or
+        // anything the person added themselves.
         const beforeCount = Object.values(db.categories || {}).flat().length;
+        localStorage.removeItem(VOCAB_VERSION_KEY);
         db = initDB();
         const afterCount = Object.values(db.categories || {}).flat().length;
         const newAdded = afterCount - beforeCount;
