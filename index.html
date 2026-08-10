@@ -845,7 +845,7 @@ Or just paste raw lesson notes — it'll figure it out."></textarea>
 
         <!-- EXCEL IMPORT -->
         <div class="info-box" style="margin-top:1.25rem">
-          <strong>Import vocab from Excel:</strong> A spreadsheet with two columns — <em>English</em> and <em>Arabic</em> (header row optional). After picking the file you choose which category the words go into (existing or new).
+          <strong>Import vocab from Excel:</strong> A spreadsheet with <em>English</em> and <em>Arabic</em> columns, plus an optional third <em>Category</em> column (header row optional). Rows with a category go straight into that category, existing or new. Rows without one use the category you pick below.
         </div>
         <div class="export-box">
           <div>
@@ -860,11 +860,14 @@ Or just paste raw lesson notes — it'll figure it out."></textarea>
 
         <div id="excelPickerArea" style="display:none;margin-top:0.75rem;padding:0.9rem;border:1px solid rgba(200,149,42,0.35);background:var(--card-bg);border-radius:4px">
           <div style="font-size:0.85rem;margin-bottom:0.6rem"><strong id="excelSummary"></strong></div>
-          <div style="font-size:0.72rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.35rem">Category</div>
-          <select id="excelCatSelect" onchange="onExcelCatChange()" style="font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.55rem 0.7rem;border:1px solid rgba(200,149,42,0.3);border-radius:3px;background:var(--card-bg);color:var(--ink);width:100%;outline:none;margin-bottom:0.5rem"></select>
-          <input type="text" id="excelNewCatName" placeholder="New category name" style="display:none;font-family:'Manrope',sans-serif;font-size:0.78rem;padding:0.55rem 0.7rem;border:1px solid rgba(200,149,42,0.3);border-radius:3px;background:var(--card-bg);color:var(--ink);width:100%;outline:none;margin-bottom:0.5rem">
+          <div id="excelCatBreakdown" style="display:none;margin-bottom:0.6rem;font-size:0.75rem;font-family:'Manrope',sans-serif;color:var(--mist)"></div>
+          <div id="excelFallbackCatWrap">
+            <div id="excelFallbackCatLabel" style="font-size:0.72rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.35rem">Category</div>
+            <select id="excelCatSelect" onchange="onExcelCatChange()" style="font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.55rem 0.7rem;border:1px solid rgba(200,149,42,0.3);border-radius:3px;background:var(--card-bg);color:var(--ink);width:100%;outline:none;margin-bottom:0.5rem"></select>
+            <input type="text" id="excelNewCatName" placeholder="New category name" style="display:none;font-family:'Manrope',sans-serif;font-size:0.78rem;padding:0.55rem 0.7rem;border:1px solid rgba(200,149,42,0.3);border-radius:3px;background:var(--card-bg);color:var(--ink);width:100%;outline:none;margin-bottom:0.5rem">
+          </div>
           <div style="margin-top:0.4rem;display:flex;gap:0.5rem;flex-wrap:wrap">
-            <button class="ctrl-btn" onclick="confirmExcelImport()">Add to category</button>
+            <button class="ctrl-btn" id="excelConfirmBtn" onclick="confirmExcelImport()">Add to category</button>
             <button class="ctrl-btn ghost" onclick="cancelExcelImport()">Cancel</button>
           </div>
           <div id="excelPreview" style="margin-top:0.7rem;max-height:140px;overflow:auto;font-size:0.75rem;font-family:'Manrope',sans-serif;color:var(--mist)"></div>
@@ -1610,6 +1613,7 @@ let reviewDirection = localStorage.getItem('masri_review_direction') || 'ar2en';
 
 const DAILY_NEW_LIMIT = 50;
 const DAILY_REVIEW_CAP = 50; // max cards shown per session before "Continue" prompt
+const NEW_RATIO = 0.3; // reserve at least 30% of a capped session for new words, when available
 // Learning steps in days (fractional ok): 0 = same day
 const LEARN_STEPS = [1, 6]; // first review after 1 day, then 6 days = Anki default
 
@@ -1715,37 +1719,55 @@ function getNewSeenTodayCount() {
 
 function getDuePool(category = 'All') {
   const today = todayStr();
-  let all;
+  // Build a map of category -> items, instead of one flattened list, so we
+  // can round-robin new-word selection across categories further down.
+  let categoryMap;
   if (typeof srsCatFilter !== 'undefined' && srsCatFilter.mode !== 'all') {
-    all = [];
+    categoryMap = {};
     Object.entries(db.categories).forEach(([cat, items]) => {
-      if (filterMatchesCategory(cat)) all.push(...items);
+      if (filterMatchesCategory(cat)) categoryMap[cat] = items;
     });
   } else if (category !== 'All') {
-    all = (db.categories[category] || []);
+    categoryMap = { [category]: db.categories[category] || [] };
   } else {
-    all = Object.values(db.categories).flat();
+    categoryMap = db.categories;
   }
   const newSeenToday = getNewSeenTodayCount();
 
   const reviews = [];
-  const newCards = [];
+  const newByCategory = []; // one array of unseen items per category, category order preserved
 
-  all.forEach(item => {
-    const k = srsKey(item);
-    if (!srs[k]) {
-      newCards.push(item);
-    } else {
-      const card = srs[k];
-      if (card.dueDate <= today) {
-        if (card.state === 'new' || (card.state === 'learning' && card.reps === 0)) {
-          newCards.push(item);
-        } else {
-          reviews.push(item);
+  Object.values(categoryMap).forEach(items => {
+    const catNew = [];
+    items.forEach(item => {
+      const k = srsKey(item);
+      if (!srs[k]) {
+        catNew.push(item);
+      } else {
+        const card = srs[k];
+        if (card.dueDate <= today) {
+          if (card.state === 'new' || (card.state === 'learning' && card.reps === 0)) {
+            catNew.push(item);
+          } else {
+            reviews.push(item);
+          }
         }
       }
-    }
+    });
+    if (catNew.length) newByCategory.push(catNew);
   });
+
+  // Round-robin across categories: take one unseen word from each category in
+  // turn, so a big category (e.g. Verb Conjugations) can't hog the whole daily
+  // new-word allowance while a smaller one (e.g. Kitchen) never gets picked.
+  const newCards = [];
+  let idx = 0;
+  while (newByCategory.some(arr => idx < arr.length)) {
+    newByCategory.forEach(arr => {
+      if (idx < arr.length) newCards.push(arr[idx]);
+    });
+    idx++;
+  }
 
   const newAllowed = Math.max(0, DAILY_NEW_LIMIT - newSeenToday);
   const limitedNew = newCards.slice(0, newAllowed);
@@ -1757,8 +1779,18 @@ function getDueItems(unlimited = false, category = 'All') {
   if (unlimited) {
     return [...pool.reviews, ...pool.newCards];
   }
-  // Cap at DAILY_REVIEW_CAP, prioritizing reviews over new cards
-  return [...pool.reviews, ...pool.limitedNew].slice(0, DAILY_REVIEW_CAP);
+  const totalAvailable = pool.reviews.length + pool.limitedNew.length;
+  if (totalAvailable <= DAILY_REVIEW_CAP) {
+    // Everything fits in one session, no need to ration anything.
+    return [...pool.reviews, ...pool.limitedNew];
+  }
+  // Reserve at least NEW_RATIO of the session for new words, if that many are
+  // actually available today; otherwise just top the session up with reviews.
+  const minNewSlots = Math.min(pool.limitedNew.length, Math.ceil(DAILY_REVIEW_CAP * NEW_RATIO));
+  const reviewSlots = Math.min(pool.reviews.length, DAILY_REVIEW_CAP - minNewSlots);
+  const leftoverSlots = DAILY_REVIEW_CAP - reviewSlots - minNewSlots;
+  const newSlots = Math.min(pool.limitedNew.length, minNewSlots + leftoverSlots);
+  return [...pool.reviews.slice(0, reviewSlots), ...pool.limitedNew.slice(0, newSlots)];
 }
 
 function getTotalDueCount(category = 'All') {
@@ -2279,20 +2311,24 @@ function handleExcelFile(event) {
 
 function parseExcelRows(rows) {
   if (!rows || !rows.length) return [];
-  // Drop empty rows
-  rows = rows.filter(r => r && (String(r[0]||'').trim() || String(r[1]||'').trim()));
+  // Drop fully empty rows
+  rows = rows.filter(r => r && (String(r[0]||'').trim() || String(r[1]||'').trim() || String(r[2]||'').trim()));
   if (!rows.length) return [];
 
-  // Decide which column is Arabic / English by sniffing the data.
-  // Default: column 0 = English, column 1 = Arabic.
-  let arCol = 1, enCol = 0;
-  // Skip header row if it clearly says "english"/"arabic"
+  // Decide which column is Arabic / English / Category by sniffing the data.
+  // Default: column 0 = English, column 1 = Arabic, column 2 = Category (if present).
+  let arCol = 1, enCol = 0, catCol = 2;
+  // Skip header row if it clearly names the columns
   const first = rows[0].map(c => String(c).toLowerCase().trim());
-  if (first.some(c => c === 'english' || c === 'arabic')) {
-    if (first[0] === 'arabic' || first[1] === 'english') { arCol = 0; enCol = 1; }
+  const hasHeaderWords = first.some(c => c === 'english' || c === 'arabic' || c === 'category');
+  if (hasHeaderWords) {
+    const idxOf = (name) => first.indexOf(name);
+    if (idxOf('english') !== -1) enCol = idxOf('english');
+    if (idxOf('arabic') !== -1) arCol = idxOf('arabic');
+    catCol = idxOf('category'); // -1 if not present
     rows = rows.slice(1);
   } else {
-    // Heuristic: which column has more Arabic-looking content?
+    // Heuristic: which of columns 0/1 has more Arabic-looking content?
     const arabicScore = (col) => {
       let s = 0;
       rows.slice(0, 20).forEach(r => {
@@ -2304,6 +2340,10 @@ function parseExcelRows(rows) {
       return s;
     };
     if (arabicScore(0) > arabicScore(1)) { arCol = 0; enCol = 1; }
+    // Only treat column 2 as category if it actually has data in a good chunk of rows
+    // and doesn't look like more Arabic/English content itself.
+    const catFillRatio = rows.slice(0, 30).filter(r => String(r[2] || '').trim()).length / Math.min(30, rows.length);
+    if (catFillRatio < 0.3) catCol = -1;
   }
 
   const out = [];
@@ -2312,10 +2352,11 @@ function parseExcelRows(rows) {
     const ar = String(r[arCol] || '').trim();
     const en = String(r[enCol] || '').trim();
     if (!ar || !en) return;
+    const cat = (catCol >= 0) ? String(r[catCol] || '').trim() : '';
     const key = ar.toLowerCase().replace(/\s+/g, '');
     if (seen.has(key)) return;
     seen.add(key);
-    out.push({ ar, en });
+    out.push({ ar, en, cat });
   });
   return out;
 }
@@ -2330,12 +2371,46 @@ function openExcelCategoryPicker() {
   if (cats.length) sel.value = cats[0];
   document.getElementById('excelNewCatName').style.display = 'none';
   document.getElementById('excelNewCatName').value = '';
+
+  const withCat = pendingExcelItems.filter(i => i.cat);
+  const withoutCat = pendingExcelItems.filter(i => !i.cat);
+
   document.getElementById('excelSummary').textContent =
     `Found ${pendingExcelItems.length} vocab pairs.`;
+
+  // Breakdown of categories detected in the sheet itself
+  const breakdown = document.getElementById('excelCatBreakdown');
+  if (withCat.length) {
+    const counts = {};
+    withCat.forEach(i => { counts[i.cat] = (counts[i.cat] || 0) + 1; });
+    const lines = Object.keys(counts).sort().map(c => {
+      const tag = db.categories[c] ? 'existing' : 'new';
+      return `${escapeHtml(c)} — ${counts[c]} item${counts[c] === 1 ? '' : 's'} (${tag})`;
+    });
+    breakdown.innerHTML = '<strong>Categories from the sheet:</strong><br>' + lines.join('<br>');
+    breakdown.style.display = 'block';
+  } else {
+    breakdown.style.display = 'none';
+  }
+
+  // Fallback category picker only matters for rows with no category column value
+  const fallbackWrap = document.getElementById('excelFallbackCatWrap');
+  const fallbackLabel = document.getElementById('excelFallbackCatLabel');
+  if (withoutCat.length) {
+    fallbackWrap.style.display = 'block';
+    fallbackLabel.textContent = withCat.length
+      ? `Category for the ${withoutCat.length} item${withoutCat.length === 1 ? '' : 's'} without one`
+      : 'Category';
+  } else {
+    fallbackWrap.style.display = 'none';
+  }
+
+  document.getElementById('excelConfirmBtn').textContent = withCat.length ? 'Import all' : 'Add to category';
+
   const prev = document.getElementById('excelPreview');
   prev.innerHTML = '<strong>Preview:</strong><br>' +
     pendingExcelItems.slice(0, 8).map(i =>
-      `<span style="color:var(--ink)">${escapeHtml(i.ar)}</span> &nbsp;= &nbsp;${escapeHtml(i.en)}`
+      `<span style="color:var(--ink)">${escapeHtml(i.ar)}</span> &nbsp;= &nbsp;${escapeHtml(i.en)}${i.cat ? ` &nbsp;<em>[${escapeHtml(i.cat)}]</em>` : ''}`
     ).join('<br>') +
     (pendingExcelItems.length > 8 ? `<br><em>… and ${pendingExcelItems.length - 8} more</em>` : '');
   box.style.display = 'block';
@@ -2350,28 +2425,49 @@ function onExcelCatChange() {
 }
 
 function confirmExcelImport() {
-  const sel = document.getElementById('excelCatSelect');
-  let cat = sel.value;
-  if (cat === '__new__') {
-    cat = document.getElementById('excelNewCatName').value.trim();
-    if (!cat) { toast('Type a category name first'); return; }
-  }
   if (!pendingExcelItems.length) { toast('Nothing to import'); return; }
-  if (!db.categories[cat]) db.categories[cat] = [];
-  const before = db.categories[cat].length;
-  add(db, cat, pendingExcelItems);
-  const added = db.categories[cat].length - before;
-  const dupes = pendingExcelItems.length - added;
+
+  const withoutCat = pendingExcelItems.filter(i => !i.cat);
+  let fallbackCat = null;
+  if (withoutCat.length) {
+    const sel = document.getElementById('excelCatSelect');
+    fallbackCat = sel.value;
+    if (fallbackCat === '__new__') {
+      fallbackCat = document.getElementById('excelNewCatName').value.trim();
+      if (!fallbackCat) { toast('Type a category name first'); return; }
+    }
+  }
+
+  // Group items by their target category: own category from the sheet, or the fallback.
+  const groups = {};
+  pendingExcelItems.forEach(item => {
+    const cat = item.cat || fallbackCat;
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(item);
+  });
+
+  let totalAdded = 0, totalDupes = 0;
+  const perCat = [];
+  Object.keys(groups).forEach(cat => {
+    if (!db.categories[cat]) db.categories[cat] = [];
+    const before = db.categories[cat].length;
+    add(db, cat, groups[cat].map(i => ({ ar: i.ar, en: i.en })));
+    const added = db.categories[cat].length - before;
+    const dupes = groups[cat].length - added;
+    totalAdded += added;
+    totalDupes += dupes;
+    perCat.push(`${escapeHtml(cat)}: +${added}${dupes > 0 ? ` (${dupes} dupes skipped)` : ''}`);
+  });
   saveDB(db);
 
   const res = document.getElementById('excelResult');
   res.style.display = 'block';
-  res.innerHTML = `<strong>✓ Added ${added} items</strong> to &ldquo;${escapeHtml(cat)}&rdquo;${dupes > 0 ? ` (${dupes} duplicates skipped)` : ''}.`;
+  res.innerHTML = `<strong>✓ Added ${totalAdded} items</strong>${totalDupes > 0 ? ` (${totalDupes} duplicates skipped)` : ''} across ${perCat.length} categor${perCat.length === 1 ? 'y' : 'ies'}:<br>${perCat.join('<br>')}`;
   document.getElementById('excelPickerArea').style.display = 'none';
   pendingExcelItems = [];
   updateNavBadge();
   if (currentTab === 'browse') renderBrowse();
-  toast(`+${added} items added!`);
+  toast(`+${totalAdded} items added!`);
 }
 
 function cancelExcelImport() {
