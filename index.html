@@ -2986,21 +2986,26 @@ async function initCloud() {
         db = initDB();
         const afterCount = Object.values(db.categories || {}).flat().length;
         const newAdded = afterCount - beforeCount;
-        if (newAdded > 0) {
-          console.log(`[cloud] Merged ${newAdded} new vocab item(s) from updated HTML.`);
-          // Force a push so other devices get the additions
+        const vocabChanged = newAdded !== 0;
+        if (vocabChanged) {
+          console.log(`[cloud] Vocab reseeded from updated HTML: ${beforeCount} -> ${afterCount} item(s).`);
+          // Force a push so other devices (and the cloud copy itself) get the
+          // updated count — this also covers a full replacement, where the new
+          // count is smaller than before, not just additions.
           localStorage.setItem(LAST_MODIFIED_KEY, Date.now().toString());
         }
 
-        if (changed || newAdded > 0) {
+        if (changed || vocabChanged) {
           // Re-render whichever tab is active
           if (currentTab === 'review') initReview();
           renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
           updateNavBadge();
         }
 
-        // Push merged result back to cloud so all devices see new built-in vocab
-        if (newAdded > 0) {
+        // Push the reseeded result back to cloud so all devices — and the
+        // cloud document itself — reflect the updated vocab, whether it grew
+        // or shrank.
+        if (vocabChanged) {
           cloudReady = true;
           await doCloudSync();
         }
