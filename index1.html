@@ -1,0 +1,3112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مصري — Egyptian Arabic Study</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;500;600&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand: #ededed;
+    --papyrus: #e0e0e0;
+    --nile: #102019;
+    --gold: #dc7b40;
+    --gold-light: #e8975e;
+    --rust: #dc7b40;
+    --moss: #1f3e30;
+    --ink: #102019;
+    --mist: #6a7f76;
+    --card-bg: #ffffff;
+    --shadow: 0 4px 24px rgba(16,32,25,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--sand);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image: 
+      radial-gradient(ellipse at 20% 10%, rgba(220,123,64,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(16,32,25,0.05) 0%, transparent 50%);
+  }
+
+  header {
+    background: var(--nile);
+    color: var(--sand);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--gold);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .logo-ar {
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.85rem;
+    color: var(--mist);
+    font-style: italic;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.7rem;
+    color: var(--mist);
+  }
+
+  .stat-num {
+    color: var(--gold-light);
+    font-weight: 500;
+    font-size: 1rem;
+  }
+
+  nav {
+    display: flex;
+    gap: 0;
+    background: var(--papyrus);
+    border-bottom: 1px solid rgba(200,149,42,0.3);
+    overflow-x: auto;
+    padding: 0 1rem;
+  }
+
+  nav button {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.72rem;
+    padding: 0.85rem 1.2rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--mist);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  nav button.active, nav button:hover {
+    color: var(--nile);
+    border-bottom-color: var(--gold);
+  }
+
+  nav button.active { font-weight: 500; color: var(--ink); }
+
+  main { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* BROWSE */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-top: 0.5rem;
+  }
+
+  .category-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(200,149,42,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .cat-header {
+    padding: 0.9rem 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-left: 4px solid var(--gold);
+  }
+
+  .cat-header:hover { background: var(--papyrus); }
+
+  .cat-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .cat-count {
+    font-size: 0.7rem;
+    color: var(--mist);
+    background: var(--papyrus);
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+  }
+
+  .cat-items {
+    display: none;
+    padding: 0.5rem 0;
+    border-top: 1px solid rgba(200,149,42,0.15);
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .cat-items.open { display: block; }
+
+  .vocab-row {
+    padding: 0.5rem 1.1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    border-bottom: 1px solid rgba(200,149,42,0.07);
+    font-size: 0.78rem;
+    transition: background 0.15s;
+  }
+
+  .vocab-row:hover { background: rgba(200,149,42,0.05); }
+
+  .vocab-arabic {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 600;
+    color: var(--rust);
+    min-width: 140px;
+    font-size: 0.95rem;
+    direction: ltr;
+  }
+
+  .vocab-english { color: var(--nile); flex: 1; }
+
+  /* FLASHCARD */
+  .flashcard-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 0;
+  }
+
+  .deck-select {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .deck-btn {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.7rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--gold);
+    background: none;
+    cursor: pointer;
+    color: var(--nile);
+    border-radius: 2px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .deck-btn.selected, .deck-btn:hover {
+    background: var(--gold);
+    color: white;
+  }
+
+  .card-wrapper {
+    perspective: 1000px;
+    width: 100%;
+    max-width: 520px;
+    height: 260px;
+    cursor: pointer;
+  }
+
+  .card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-inner.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    background: var(--card-bg);
+    border: 1px solid rgba(200,149,42,0.3);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+
+  .card-back { transform: rotateY(180deg); }
+
+  .card-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--mist);
+    margin-bottom: 1rem;
+  }
+
+  .card-arabic {
+    font-family: 'Cairo', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--rust);
+    direction: rtl;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-english {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--nile);
+    margin-bottom: 0.5rem;
+  }
+
+  .card-hint {
+    font-size: 0.72rem;
+    color: var(--mist);
+    margin-top: 0.75rem;
+  }
+
+  .card-counter {
+    font-size: 0.72rem;
+    color: var(--mist);
+  }
+
+  .card-controls {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .ctrl-btn {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.75rem;
+    padding: 0.6rem 1.4rem;
+    border: 1px solid var(--nile);
+    background: var(--nile);
+    color: var(--sand);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .ctrl-btn:hover { background: var(--gold); border-color: var(--gold); }
+  .ctrl-btn.ghost { background: none; color: var(--nile); }
+  .ctrl-btn.ghost:hover { background: var(--papyrus); }
+
+
+  /* UPLOAD */
+  .upload-area {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .drop-zone {
+    border: 2px dashed rgba(200,149,42,0.5);
+    border-radius: 6px;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: var(--card-bg);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--gold);
+    background: var(--papyrus);
+  }
+
+  .drop-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+
+  .drop-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    color: var(--nile);
+    margin-bottom: 0.5rem;
+  }
+
+  .drop-sub { font-size: 0.72rem; color: var(--mist); }
+
+  textarea.paste-area {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.75rem;
+    padding: 1rem;
+    border: 1px solid rgba(200,149,42,0.3);
+    border-radius: 4px;
+    background: var(--card-bg);
+    color: var(--ink);
+    resize: vertical;
+    min-height: 160px;
+    width: 100%;
+    outline: none;
+  }
+
+  textarea.paste-area:focus { border-color: var(--gold); }
+
+  .upload-actions { display: flex; gap: 0.75rem; }
+
+  .info-box {
+    background: var(--card-bg);
+    border: 1px solid rgba(200,149,42,0.2);
+    border-left: 3px solid var(--gold);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    font-size: 0.75rem;
+    color: var(--mist);
+    line-height: 1.6;
+  }
+
+  .info-box strong { color: var(--nile); }
+
+  .progress-bar-wrap {
+    height: 3px;
+    background: rgba(200,149,42,0.2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    transition: width 0.3s;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--nile);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(200,149,42,0.3);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--nile);
+    color: var(--sand);
+    padding: 0.75rem 1.25rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    border-left: 3px solid var(--gold);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--mist);
+    font-size: 0.8rem;
+  }
+
+  /* SRS REVIEW */
+  .srs-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .srs-stat {
+    background: var(--card-bg);
+    border: 1px solid rgba(200,149,42,0.2);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+
+  .srs-stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    display: block;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .srs-stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mist);
+  }
+
+  .srs-due { color: var(--rust); }
+  .srs-streak { color: var(--gold); }
+  .srs-total { color: var(--nile); }
+  .srs-mastered { color: var(--moss); }
+
+  .srs-card-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .rating-btns {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .rate-btn {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.72rem;
+    padding: 0.55rem 1rem;
+    border-radius: 3px;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+
+  .rate-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+
+  .rate-again { background: rgba(184,74,44,0.1); border-color: var(--rust); color: var(--rust); }
+  .rate-hard  { background: rgba(200,149,42,0.1); border-color: var(--gold); color: #8a6010; }
+  .rate-good  { background: rgba(74,103,65,0.12); border-color: var(--moss); color: var(--moss); }
+  .rate-easy  { background: rgba(26,58,74,0.1); border-color: var(--nile); color: var(--nile); }
+
+  .srs-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid rgba(200,149,42,0.2);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .srs-empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .srs-empty-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--nile); margin-bottom: 0.5rem; }
+  .srs-empty-sub { font-size: 0.75rem; color: var(--mist); }
+
+  .weak-list {
+    width: 100%;
+    max-width: 520px;
+    background: var(--card-bg);
+    border: 1px solid rgba(200,149,42,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .weak-list-title {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mist);
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid rgba(200,149,42,0.15);
+  }
+
+  .weak-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    border-bottom: 1px solid rgba(200,149,42,0.07);
+    align-items: center;
+  }
+
+  .weak-ar { font-family: 'Cairo', sans-serif; color: var(--rust); font-size: 0.85rem; }
+  .weak-en { color: var(--mist); }
+  .weak-badge {
+    font-size: 0.65rem;
+    background: rgba(184,74,44,0.1);
+    color: var(--rust);
+    border-radius: 10px;
+    padding: 0.15rem 0.45rem;
+  }
+
+  /* EXPORT */
+  .export-box {
+    background: var(--card-bg);
+    border: 1px solid rgba(200,149,42,0.2);
+    border-radius: 4px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .export-label { font-size: 0.78rem; color: var(--nile); }
+  .export-sub { font-size: 0.68rem; color: var(--mist); margin-top: 0.2rem; }
+
+  @media (max-width: 600px) {
+    header { padding: 0.85rem 1rem; gap: 0.5rem; }
+    .stats-bar { display: none; }
+    .sync-status { font-size: 0.6rem; padding: 0.25rem 0.55rem; }
+    main { padding: 1.25rem 1rem; }
+    .srs-dashboard { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* DELETE BUTTON */
+    .vocab-edit {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--mist);
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0 0.3rem;
+    margin-left: 0.2rem;
+    transition: opacity 0.15s, color 0.15s, transform 0.15s;
+    font-family: 'Manrope', sans-serif;
+  }
+  .vocab-row:hover .vocab-edit { opacity: 0.55; }
+  .vocab-edit:hover {
+    opacity: 1 !important;
+    color: var(--gold);
+    transform: scale(1.15);
+  }
+
+  .vocab-move {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--mist);
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0 0.3rem;
+    margin-left: 0.2rem;
+    transition: opacity 0.15s, color 0.15s, transform 0.15s;
+    font-family: 'Manrope', sans-serif;
+  }
+  .vocab-row:hover .vocab-move { opacity: 0.55; }
+  .vocab-move:hover {
+    opacity: 1 !important;
+    color: var(--gold);
+    transform: scale(1.15);
+  }
+
+  .vocab-delete {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--mist);
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0 0.4rem;
+    margin-left: auto;
+    transition: opacity 0.15s, color 0.15s, transform 0.15s;
+    font-family: 'Manrope', sans-serif;
+  }
+  .vocab-row:hover .vocab-delete,
+  .weak-row:hover .vocab-delete {
+    opacity: 0.55;
+  }
+  .vocab-delete:hover {
+    opacity: 1 !important;
+    color: var(--rust);
+    transform: scale(1.15);
+  }
+
+  /* VERB GROUPS */
+  .verb-group { border-bottom: 1px solid rgba(200,149,42,0.1); }
+  .verb-group-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding: 0.55rem 1.1rem;
+    cursor: pointer;
+    background: rgba(220,123,64,0.04);
+    transition: background 0.15s;
+  }
+  .verb-group-header:hover { background: rgba(220,123,64,0.09); }
+  .verb-infinitive {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    color: var(--rust);
+    font-size: 1rem;
+    direction: rtl;
+  }
+  .verb-english { flex: 1; color: var(--mist); font-size: 0.75rem; font-style: italic; }
+  .verb-toggle { color: var(--mist); font-size: 0.7rem; transition: transform 0.2s; }
+  .verb-group.open .verb-toggle { transform: rotate(180deg); }
+  .verb-conjugations { display: none; padding-left: 0.6rem; background: rgba(255,255,255,0.5); }
+  .verb-group.open .verb-conjugations { display: block; }
+
+  /* SYNC INDICATOR */
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.65rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    font-size: 0.65rem;
+    color: var(--mist);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: default;
+    transition: all 0.2s;
+  }
+  .sync-status .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #6b7280;
+    transition: background 0.3s;
+  }
+  .sync-status.synced .sync-dot { background: #4ade80; }
+  .sync-status.syncing .sync-dot { background: #facc15; animation: syncPulse 1s ease-in-out infinite; }
+  .sync-status.offline .sync-dot { background: #9ca3af; }
+  .sync-status.error .sync-dot { background: #ef4444; }
+  @keyframes syncPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-ar">مصري</span>
+    <span class="logo-en">Egyptian Arabic</span>
+  </div>
+  <div class="stats-bar">
+    <div><span class="stat-num" id="totalWords">0</span><br>words</div>
+    <div><span class="stat-num" id="totalVerbs">0</span><br>verbs</div>
+    <div><span class="stat-num" id="totalPhrases">0</span><br>phrases</div>
+  </div>
+  <div class="sync-status offline" id="syncStatus" title="Cloud sync status">
+    <span class="sync-dot"></span>
+    <span id="syncStatusText">offline</span>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('browse')">Browse</button>
+  <button onclick="showTab('review')">Flashcards <span id="navDueBadge" style="display:none;background:var(--rust);color:white;border-radius:10px;padding:0.1rem 0.4rem;font-size:0.65rem;margin-left:0.3rem"></span></button>
+  <button onclick="showTab('upload')">Export / Import</button>
+</nav>
+
+<main>
+  <!-- REVIEW TAB (SRS) -->
+  <div id="tab-review" style="display:none">
+    <div class="section-title">Spaced Repetition Review</div>
+
+    <div class="srs-dashboard">
+      <div class="srs-stat">
+        <span class="srs-stat-num srs-due" id="srsDueCount">0</span>
+        <span class="srs-stat-label" id="srsDueLabel">Due today</span>
+        <span style="font-size:0.6rem;color:var(--mist);display:block;margin-top:0.25rem;letter-spacing:0.04em" id="srsDueExtra"></span>
+      </div>
+      <div class="srs-stat">
+        <span class="srs-stat-num srs-streak" id="srsStreak">0</span>
+        <span class="srs-stat-label">Days studied</span>
+      </div>
+      <div class="srs-stat">
+        <span class="srs-stat-num srs-mastered" id="srsMastered">0</span>
+        <span class="srs-stat-label">Mastered (21d+)</span>
+      </div>
+      <div class="srs-stat">
+        <span class="srs-stat-num srs-total" id="srsNewToday">0</span>
+        <span class="srs-stat-label">New today / 50</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start">
+      <div style="flex:0 0 auto">
+        <div style="font-size:0.68rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem">Direction</div>
+        <div class="deck-select" id="directionSelect">
+          <button class="deck-btn" id="dirBtnAr2En" onclick="setReviewDirection('ar2en')">Arabic → English</button>
+          <button class="deck-btn" id="dirBtnEn2Ar" onclick="setReviewDirection('en2ar')">English → Arabic</button>
+        </div>
+      </div>
+      <div style="flex:1 1 auto;min-width:200px">
+        <div style="font-size:0.68rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem">Category filter</div>
+        <div class="deck-select" id="reviewCatSelect"></div>
+      </div>
+    </div>
+
+    <div class="srs-card-area" id="srsCardArea">
+      <!-- filled by JS -->
+    </div>
+
+    <div id="srsWeakSection" style="display:none;margin-top:1.5rem;display:flex;flex-direction:column;align-items:center;gap:0.5rem">
+      <div class="weak-list" id="srsWeakList"></div>
+    </div>
+  </div>
+
+  <!-- BROWSE TAB -->
+  <div id="tab-browse">
+    <div class="section-title">All Categories</div>
+    <div class="category-grid" id="categoryGrid"></div>
+  </div>
+
+
+
+  <!-- UPLOAD TAB -->
+  <div id="tab-upload" style="display:none">
+    <div class="upload-area">
+
+      <!-- EXPORT / IMPORT -->
+      <div>
+        <div class="section-title" style="font-size:1.1rem">Export & Import</div>
+        <div class="info-box" style="margin-bottom:1rem">
+          <strong>Save your data:</strong> Export downloads a JSON file with all your vocab <em>and</em> SRS progress. When you get a new version of the app, import that file to pick up exactly where you left off — no data lost.
+        </div>
+        <div class="export-box">
+          <div>
+            <div class="export-label">📥 Export all data</div>
+            <div class="export-sub">Vocab + SRS progress → masri_backup.json</div>
+          </div>
+          <button class="ctrl-btn" onclick="exportData()">Download backup</button>
+        </div>
+        <div class="export-box" style="margin-top:0.75rem">
+          <div>
+            <div class="export-label">📤 Import backup</div>
+            <div class="export-sub">Load a masri_backup.json — merges without duplicates</div>
+          </div>
+          <label class="ctrl-btn" style="cursor:pointer">
+            Load file
+            <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+          </label>
+        </div>
+        <div id="importResult" style="display:none;margin-top:0.75rem" class="info-box"></div>
+
+        <!-- EXCEL IMPORT -->
+        <div class="info-box" style="margin-top:1.25rem">
+          <strong>Import vocab from Excel:</strong> A spreadsheet with <em>English</em> and <em>Arabic</em> columns, plus an optional third <em>Category</em> column (header row optional). Rows with a category go straight into that category, existing or new. Rows without one use the category you pick below.
+        </div>
+        <div class="export-box">
+          <div>
+            <div class="export-label">📊 Import Excel</div>
+            <div class="export-sub">.xlsx with English &amp; Arabic columns</div>
+          </div>
+          <label class="ctrl-btn" style="cursor:pointer">
+            Select Excel
+            <input type="file" accept=".xlsx,.xls,.csv" id="excelFileInput" onchange="handleExcelFile(event)" style="display:none">
+          </label>
+        </div>
+
+        <div id="excelPickerArea" style="display:none;margin-top:0.75rem;padding:0.9rem;border:1px solid rgba(200,149,42,0.35);background:var(--card-bg);border-radius:4px">
+          <div style="font-size:0.85rem;margin-bottom:0.6rem"><strong id="excelSummary"></strong></div>
+          <div id="excelCatBreakdown" style="display:none;margin-bottom:0.6rem;font-size:0.75rem;font-family:'Manrope',sans-serif;color:var(--mist)"></div>
+          <div id="excelFallbackCatWrap">
+            <div id="excelFallbackCatLabel" style="font-size:0.72rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.35rem">Category</div>
+            <select id="excelCatSelect" onchange="onExcelCatChange()" style="font-family:'Manrope',sans-serif;font-size:0.8rem;padding:0.55rem 0.7rem;border:1px solid rgba(200,149,42,0.3);border-radius:3px;background:var(--card-bg);color:var(--ink);width:100%;outline:none;margin-bottom:0.5rem"></select>
+            <input type="text" id="excelNewCatName" placeholder="New category name" style="display:none;font-family:'Manrope',sans-serif;font-size:0.78rem;padding:0.55rem 0.7rem;border:1px solid rgba(200,149,42,0.3);border-radius:3px;background:var(--card-bg);color:var(--ink);width:100%;outline:none;margin-bottom:0.5rem">
+          </div>
+          <div style="margin-top:0.4rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="ctrl-btn" id="excelConfirmBtn" onclick="confirmExcelImport()">Add to category</button>
+            <button class="ctrl-btn ghost" onclick="cancelExcelImport()">Cancel</button>
+          </div>
+          <div id="excelPreview" style="margin-top:0.7rem;max-height:140px;overflow:auto;font-size:0.75rem;font-family:'Manrope',sans-serif;color:var(--mist)"></div>
+        </div>
+        <div id="excelResult" style="display:none;margin-top:0.75rem" class="info-box"></div>
+
+        <!-- CLEAN UP MY LESSONS -->
+        <div id="cleanupBox" style="display:none;margin-top:1.25rem;padding:0.9rem;border:1px solid rgba(184,74,44,0.4);background:var(--card-bg);border-radius:4px">
+          <div style="font-size:0.85rem;margin-bottom:0.5rem"><strong>Clean up the &ldquo;My Lessons&rdquo; category</strong></div>
+          <div style="font-size:0.78rem;color:var(--mist);margin-bottom:0.6rem">Moves verbs into <em>Verbs</em>, conjugations into <em>Verb Conjugations</em>, full sentences into a new <em>Phrases</em> category, anything leftover into <em>Other</em>. Junk and duplicates that already exist elsewhere get removed. After this the &ldquo;My Lessons&rdquo; category disappears.</div>
+          <button class="ctrl-btn" onclick="cleanupMyLessons()">Run cleanup</button>
+        </div>
+        <div id="cleanupResult" style="display:none;margin-top:0.75rem" class="info-box"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const DB_KEY = 'masri_vocab_v2';
+const SRS_KEY = 'masri_srs_v2';
+const META_KEY = 'masri_meta_v2';
+const VOCAB_VERSION_KEY = 'masri_vocab_version';
+const CURRENT_VOCAB_VERSION = 11; // v11: full vocab replacement from ARABIC_WORDS___ALPHABET.xlsx — wipes old categories and reseeds with a smaller, cleaned-up set. SRS history is untouched and re-links automatically for any word whose Arabic text is unchanged. // bump this each time vocab is updated
+
+function loadDB() {
+  try { const r = localStorage.getItem(DB_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return null;
+}
+function saveDBLocal(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function saveDB(db) { saveDBLocal(db); queueCloudSync(); }
+
+function loadSRS() {
+  try { const r = localStorage.getItem(SRS_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return {};
+}
+function saveSRSLocal(srs) { localStorage.setItem(SRS_KEY, JSON.stringify(srs)); }
+function saveSRS(srs) { saveSRSLocal(srs); queueCloudSync(); }
+
+function loadMeta() {
+  try {
+    const r = localStorage.getItem(META_KEY);
+    if (r) {
+      const m = JSON.parse(r);
+      if (!Array.isArray(m.daysUsed)) m.daysUsed = m.lastStudyDate ? [m.lastStudyDate] : [];
+      return m;
+    }
+  } catch(e) {}
+  return { streak: 0, lastStudyDate: null, daysUsed: [] };
+}
+function saveMetaLocal(m) { localStorage.setItem(META_KEY, JSON.stringify(m)); }
+function saveMeta(m) { saveMetaLocal(m); queueCloudSync(); }
+
+function initDB() {
+  const existing = loadDB();
+  const storedVersion = parseInt(localStorage.getItem(VOCAB_VERSION_KEY), 10);
+  const alreadySeeded = existing && !isNaN(storedVersion) && storedVersion === CURRENT_VOCAB_VERSION;
+
+  if (alreadySeeded) {
+    // Vocab was already seeded at this version: this is a normal page load,
+    // not a fresh install or a version bump. Return the saved data as-is so
+    // anything the person added (Excel import, backup import, paste) survives.
+    return existing;
+  }
+
+  const db = existing || { categories: {} };
+
+  // ---- FULL VOCAB REPLACEMENT (curated from ARABIC_WORDS___ALPHABET.xlsx) ----
+  // This replaces the entire previous seed with a smaller, cleaned-up set.
+  db.categories = {};
+
+  add(db, 'Numbers', [
+    {ar:'Sefr', en:'0'},
+    {ar:'Waa7ed', en:'1'},
+    {ar:'Et-nain', en:'2'},
+    {ar:'Talaata', en:'3'},
+    {ar:'Arba3a', en:'4'},
+    {ar:'Khamsa', en:'5'},
+    {ar:'Setta', en:'6'},
+    {ar:'Saba3a', en:'7'},
+    {ar:'Tamanya', en:'8'},
+    {ar:'Tes3a', en:'9'},
+    {ar:'3ashara', en:'10'},
+    {ar:'7edaashar', en:'11'},
+    {ar:'Etnaashar', en:'12'},
+    {ar:'Talat-ta-shar', en:'13'},
+    {ar:'Araba3-ta-shar', en:'14'},
+    {ar:'Khamas-ta-shar', en:'15'},
+    {ar:'Set-ta-shar', en:'16'},
+    {ar:'Saba3-ta-shar', en:'17'},
+    {ar:'Taman-ta-shar', en:'18'},
+    {ar:'Tesa3-ta-shar', en:'19'},
+    {ar:'3eshreen', en:'20'},
+    {ar:'Talateen', en:'30'},
+    {ar:'Arbe3een', en:'40'},
+    {ar:'Khamseen', en:'50'},
+    {ar:'Set-teen', en:'60'},
+    {ar:'Sab3een', en:'70'},
+    {ar:'Tamanyeen', en:'80'},
+    {ar:'Tes3een', en:'90'},
+    {ar:'Meyya', en:'100'},
+    {ar:'Awwel', en:'first'},
+    {ar:'Taany', en:'second'},
+    {ar:'Taalet', en:'third'},
+    {ar:'Raabe3', en:'fourth'},
+    {ar:'Khaames', en:'fifth'},
+  ]);
+
+  add(db, 'Maps', [
+    {ar:'Yemshi', en:'to walk'},
+    {ar:'Emshi 3ala Tool', en:'walk straight ahead'},
+    {ar:'Yemeen', en:'right'},
+    {ar:'Shemaal', en:'left'},
+    {ar:'khosh/y', en:'go in / turn'},
+    {ar:'odkhol/y', en:'come in / turn'},
+    {ar:'Khosh yemeen', en:'turn right'},
+    {ar:'3ala yemeenak', en:'right side/hand'},
+    {ar:'3ala shemaalak', en:'left side'},
+    {ar:'Fien…?', en:'where is?'},
+    {ar:'Aakher esh-shaare3', en:'the end of the street'},
+    {ar:'Koshy taalet shemaal', en:'on the 3rd, turn left'},
+    {ar:'El esupermarket 3ala yemeenak', en:'the supermarket is on the right'},
+    {ar:'shaare3', en:'street'},
+    {ar:'3omaara/3emaara', en:'apartment building'},
+    {ar:'sha22a', en:'apartment'},
+    {ar:'anhi?', en:'which?'},
+    {ar:'anhi shaare3?', en:'which street?'},
+    {ar:'nemra/raQam', en:'number'},
+    {ar:'3enwaan', en:'address'},
+    {ar:'door', en:'floor'},
+    {ar:'3omaara nemra kaam?', en:'what\'s the apt number?'},
+    {ar:'khareeTa', en:'map'},
+    {ar:'Mostashfa', en:'hospital'},
+    {ar:'Gam3a', en:'university'},
+    {ar:'Ism Police', en:'police station'},
+    {ar:'Ma7all', en:'shop'},
+    {ar:'Masged', en:'mosque'},
+    {ar:'Keneesa', en:'church'},
+    {ar:'BoSTa', en:'post office'},
+    {ar:'Maktab bareed', en:'post office'},
+    {ar:'Bank', en:'bank'},
+    {ar:'Bank MaSr', en:'National Bank'},
+    {ar:'El bank el Ahly', en:'(one of the) commercial bank(s)'},
+    {ar:'Maktab', en:'office'},
+    {ar:'Saydaleyya', en:'pharmacy'},
+    {ar:'Cafeteria', en:'café'},
+    {ar:'Banzeena', en:'petrol station'},
+    {ar:'Tayyara', en:'plane / flight'},
+    {ar:'Ustaaz', en:'Mr / sir'},
+    {ar:'Tayyarty essa3a kaam?', en:'what time is my flight?'},
+    {ar:'Tayyaret Amrika essa3a kaam?', en:'what time is the America flight?'},
+    {ar:'Khamsa ella 3ashra eSSob7', en:'ten to five in the morning'},
+    {ar:'Essa3a etnain w noss eDDohr', en:'half past two in the afternoon'},
+    {ar:'Sanya wa7ada', en:'one second, please'},
+  ]);
+
+  add(db, 'Days & Time', [
+    {ar:'El-etnain', en:'Monday'},
+    {ar:'Et-talaat', en:'Tuesday'},
+    {ar:'El-Arba3', en:'Wednesday'},
+    {ar:'El-khamees', en:'Thursday'},
+    {ar:'El-gom3a', en:'Friday'},
+    {ar:'Es-sabt', en:'Saturday'},
+    {ar:'El-7add', en:'Sunday'},
+    {ar:'di\'ee\'a', en:'second'},
+    {ar:'sanya', en:'minute'},
+    {ar:'(kol) sa\'a', en:'(every) hour'},
+    {ar:'yoom', en:'day'},
+    {ar:'osboua', en:'week'},
+    {ar:'shahr', en:'month'},
+    {ar:'sana', en:'year'},
+    {ar:'eSSob7', en:'morning'},
+    {ar:'eDDohr', en:'afternoon'},
+    {ar:'Ba3d eD-Dohr', en:'afternoon'},
+    {ar:'Bellail', en:'at night'},
+    {ar:'Min tes3a le khamsa', en:'from 9 to 5'},
+    {ar:'Met2akh-khar/a', en:'late'},
+    {ar:'bokra', en:'tomorrow'},
+    {ar:'embareh', en:'yesterday'},
+    {ar:'Delwa2ty', en:'now'},
+    {ar:'Rob3', en:'¼ / quarter past'},
+    {ar:'Telt', en:'⅓ / twenty past'},
+    {ar:'noSS', en:'½ / half past'},
+    {ar:'3ashara bezzabT', en:'10:00'},
+    {ar:'3ashara w khamsa', en:'10:05'},
+    {ar:'3ashara w 3ashara', en:'10:10'},
+    {ar:'3ashara w rob3', en:'10:15'},
+    {ar:'3ashara w telt', en:'10:20'},
+    {ar:'3ashara w noSS ella khamsa', en:'10:25'},
+    {ar:'3ashara w noSS', en:'10:30'},
+    {ar:'3ashara w noSS w khamsa', en:'10:35'},
+    {ar:'7edaashar ella telt', en:'10:40'},
+    {ar:'7edaashar ella rob3', en:'10:45'},
+    {ar:'7edaashar ella 3ashra', en:'10:50'},
+    {ar:'7edaashar ella khamsa', en:'10:55'},
+    {ar:'Essa3a kaam delwa2ty?', en:'what time is it now?'},
+    {ar:'Essa3a 7awaaly tamanya w noSS', en:'it\'s around 8:30'},
+    {ar:'Essa3a kaam beZZabt?', en:'what time is it exactly?'},
+    {ar:'essa3a tamanya w noSS w khamsa', en:'it\'s 8:35'},
+    {ar:'Saa3ty', en:'my watch'},
+  ]);
+
+  add(db, 'Useful Phrases', [
+    {ar:'(7arr) aktar', en:'more (hot)'},
+    {ar:'Ezzay a2ool?', en:'how do I say…?'},
+    {ar:'ya3ni eh…?', en:'what is the meaning of…?'},
+    {ar:'2ool/y taan/y, law sama7t/y', en:'say that again, please'},
+    {ar:'Waageb', en:'homework'},
+    {ar:'maashy', en:'ok'},
+    {ar:'eh', en:'what'},
+    {ar:'taany', en:'again'},
+    {ar:'Enty mnaeen ya fatima?', en:'where are you from, Fatima? (example)'},
+    {ar:'Fain (fien NL)', en:'where'},
+    {ar:'Agaaza', en:'vacation / day off'},
+    {ar:'Ezzay el Christmas? Kan kwayes', en:'how was Christmas? it was good'},
+    {ar:'Enta bet7eb…?', en:'do you like…?'},
+    {ar:'Aywa, Ana ba7eb el-khookh', en:'yes, I like peaches'},
+    {ar:'mish', en:'not'},
+    {ar:'Ana aasef', en:'I\'m sorry (male speaker)'},
+    {ar:'Ma3lesh', en:'sorry (lighter, less serious)'},
+    {ar:'Mafeesh moshkela', en:'there\'s no problem'},
+    {ar:'Meen da?', en:'who is this? (m)'},
+    {ar:'Meen dy?', en:'who is this? (f)'},
+    {ar:'Howwa 3ando kaam sana?', en:'how old is he?'},
+    {ar:'Enta 3andak kaam sana?', en:'how old are you?'},
+    {ar:'Ana 3andy 33', en:'I am 33 years old'},
+    {ar:'Ennahaar da', en:'today'},
+    {ar:'hashoofak/ek bokra', en:'I\'ll see you tomorrow'},
+    {ar:'hashoofak/ek ba3dain', en:'I\'ll see you later'},
+    {ar:'El 3afw, ay khedma', en:'you\'re welcome, any time'},
+    {ar:'Ya nhaar eswed!', en:'what a black day!'},
+    {ar:'dars gedeed', en:'a new lesson'},
+    {ar:'Ba3d eddars', en:'after the lesson'},
+    {ar:'Badry awi!', en:'very early!'},
+    {ar:'esh-sho3\'l', en:'(the) work/job'},
+    {ar:'7afla', en:'party / concert'},
+    {ar:'mabsooT/a', en:'happy'},
+    {ar:'3ayez asma3 taany', en:'I want to listen again'},
+    {ar:'bekaam?', en:'how much (price)?'},
+    {ar:'Koll sana wenta Tayyeb', en:'happy birthday'},
+    {ar:'leh?', en:'why?'},
+    {ar:'ma3 (sa7bety)', en:'with (my friend)'},
+    {ar:'film gameel', en:'good film'},
+    {ar:'Fi colombia', en:'in Colombia'},
+    {ar:'Film adeem', en:'old movie'},
+    {ar:'Film gedeed', en:'new movie'},
+    {ar:'7elw', en:'good/beautiful'},
+    {ar:'7elw awi', en:'very interesting'},
+    {ar:'keteer', en:'a lot'},
+    {ar:'ba3dain', en:'then'},
+    {ar:'Shewayya', en:'a little'},
+    {ar:'So3\'ayyar', en:'small/young'},
+    {ar:'Momell', en:'boring'},
+    {ar:'Barcelona za7ma', en:'Barcelona is crowded'},
+    {ar:'AS7aab', en:'friends (formal) / So7aab (informal)'},
+    {ar:'Saa7eb', en:'friend'},
+    {ar:'Sa7ba', en:'female friend'},
+    {ar:'Sa7bi', en:'my friend'},
+    {ar:'Lugha', en:'language'},
+    {ar:'Lugha tanya', en:'another language'},
+    {ar:'Faaker ya3ni eh', en:'do you remember what it means?'},
+    {ar:'el floos', en:'the money'},
+    {ar:'Sett', en:'woman'},
+    {ar:'Raagel', en:'man'},
+    {ar:'3andak so2aal?', en:'do you have a question?'},
+    {ar:'bass', en:'but / only'},
+    {ar:'Mosalsal', en:'TV series'},
+    {ar:'Mosalsalaat Teweela', en:'telenovelas'},
+    {ar:'Aflaam/film', en:'movies'},
+    {ar:'Wala 7aaga', en:'nothing'},
+    {ar:'esh-shaTT', en:'beach'},
+    {ar:'Fara7', en:'wedding'},
+    {ar:'walla', en:'or (only in a question)'},
+    {ar:'Kont', en:'I was / you were'},
+    {ar:'Feeh', en:'there\'s'},
+    {ar:'Feen', en:'where?'},
+    {ar:'Fi anhi door?', en:'which floor?'},
+    {ar:'Ezzay?', en:'how?'},
+    {ar:'3aayez / 3aayza', en:'I want (m/f)'},
+    {ar:'Akl', en:'food'},
+    {ar:'aZun', en:'I think (opinion)'},
+    {ar:'ennaas', en:'the people'},
+    {ar:'mish kefeeya', en:'not enough'},
+    {ar:'soora', en:'picture'},
+    {ar:'shedeed', en:'strong/harsh'},
+    {ar:'Kefaaya', en:'sufficient'},
+    {ar:'Feeh el-aakher', en:'in the end'},
+    {ar:'Ezzaay 3erefteeh/a?', en:'how did you know him/her?'},
+    {ar:'Betes7y badry awi keda?', en:'do you wake up that early?'},
+  ]);
+
+  add(db, 'Verbs', [
+    {ar:'yebda2', en:'to begin'},
+    {ar:'Yetkallem', en:'to talk / speak'},
+    {ar:'Yaakol', en:'to eat'},
+    {ar:'Ye7ebb', en:'to like / love'},
+    {ar:'Yeroo7', en:'to go'},
+    {ar:'Ye-kteb', en:'to write'},
+    {ar:'Yeshrab', en:'to drink'},
+    {ar:'Yes7a', en:'to wake up'},
+    {ar:'Yaakhod', en:'to take'},
+    {ar:'Yokhrog', en:'to go out'},
+    {ar:'Ye2ra', en:'to read'},
+    {ar:'Ye3mel', en:'to do'},
+    {ar:'Yenaam', en:'to sleep'},
+    {ar:'Yerga3', en:'to come back'},
+    {ar:'Yerkab', en:'to get on (bus, car…)'},
+    {ar:'Yegeeb', en:'to bring'},
+    {ar:'Yegri', en:'to run'},
+    {ar:'Yeshtaghal', en:'to work'},
+    {ar:'Yeftar', en:'to have breakfast'},
+    {ar:'Yetghadda', en:'to have lunch'},
+    {ar:'Yet3ash-sha', en:'to have dinner'},
+    {ar:'Yel3ab', en:'to play'},
+    {ar:'Ye2aabel', en:'to meet'},
+    {ar:'Ye7tefel', en:'to celebrate'},
+    {ar:'Yekhallas', en:'to finish'},
+    {ar:'Yetfarrag 3ala', en:'to watch (something)'},
+    {ar:'Yezoor', en:'to visit'},
+    {ar:'Yo2-3od', en:'to sit down / to stay'},
+    {ar:'Yetla3', en:'to go upstairs / go out / leave (transport)'},
+    {ar:'Yekrah', en:'to hate'},
+    {ar:'YenaDDaf', en:'to clean'},
+    {ar:'YewSal', en:'to arrive'},
+    {ar:'Yedres', en:'to study (in general)'},
+    {ar:'Yeshtery', en:'to buy'},
+  ]);
+
+  add(db, 'Verb Conjugations', [
+    {ar:'Ana ba-7ebb', en:'I like / love', verb:'Ye7ebb', verbEn:'to like / love'},
+    {ar:'Enta bet-7ebb', en:'you (m) like / love', verb:'Ye7ebb', verbEn:'to like / love'},
+    {ar:'Enty bet-7ebby', en:'you (f) like / love', verb:'Ye7ebb', verbEn:'to like / love'},
+    {ar:'Howwa bey-7ebb', en:'he likes / loves', verb:'Ye7ebb', verbEn:'to like / love'},
+    {ar:'Heyya bet-7ebb', en:'she likes / loves', verb:'Ye7ebb', verbEn:'to like / love'},
+    {ar:'Ana ba-roo7', en:'I go', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Enta bet-roo7', en:'you (m) go', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Enty bet-roo7y', en:'you (f) go', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Howwa bey-roo7', en:'he goes', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Heyya bet-roo7', en:'she goes', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Ana baroo7 el-Gym koll yoom', en:'I go to the gym every day', verb:'Yeroo7', verbEn:'to go'},
+    {ar:'Ana ba-kteb', en:'I write', verb:'Ye-kteb', verbEn:'to write'},
+    {ar:'Enta bete-kteb', en:'you (m) write', verb:'Ye-kteb', verbEn:'to write'},
+    {ar:'Enty bete-kteby', en:'you (f) write', verb:'Ye-kteb', verbEn:'to write'},
+    {ar:'Howwa beye-kteb', en:'he writes', verb:'Ye-kteb', verbEn:'to write'},
+    {ar:'Heyya bete-kteb', en:'she writes', verb:'Ye-kteb', verbEn:'to write'},
+    {ar:'Ana ba-shrab', en:'I drink', verb:'Yeshrab', verbEn:'to drink'},
+    {ar:'Enta bete-shrab', en:'you (m) drink', verb:'Yeshrab', verbEn:'to drink'},
+    {ar:'Enty bete-shraby', en:'you (f) drink', verb:'Yeshrab', verbEn:'to drink'},
+    {ar:'Ana ba-s7a', en:'I wake up', verb:'Yes7a', verbEn:'to wake up'},
+    {ar:'Enta bete-s7a', en:'you (m) wake up', verb:'Yes7a', verbEn:'to wake up'},
+    {ar:'Enty bete-s7y', en:'you (f) wake up', verb:'Yes7a', verbEn:'to wake up'},
+    {ar:'Ana ba-akhod', en:'I take', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Enta bet-akhod', en:'you (m) take', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Enty bet-akhody', en:'you (f) take', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Baakhod dosh-sh', en:'I take a shower', verb:'Yaakhod', verbEn:'to take'},
+    {ar:'Ana ba-akhrog', en:'I go out', verb:'Yokhrog', verbEn:'to go out'},
+    {ar:'Enta bet-okhrog', en:'you (m) go out', verb:'Yokhrog', verbEn:'to go out'},
+    {ar:'Enty bet-okhrogy', en:'you (f) go out', verb:'Yokhrog', verbEn:'to go out'},
+    {ar:'Ana ba2ra', en:'I read', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Enta bet-e2ra', en:'you (m) read', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Enty bet-e2ry', en:'you (f) read', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Howwa bey-e2ra', en:'he reads', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Heyya bet-e2ra', en:'she reads', verb:'Ye2ra', verbEn:'to read'},
+    {ar:'Ana ba-rga3', en:'I come back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Enta bete-rga3', en:'you (m) come back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Enty bete-rga3y', en:'you (f) come back', verb:'Yerga3', verbEn:'to come back'},
+    {ar:'Ana ba-rkab', en:'I get on / ride', verb:'Yerkab', verbEn:'to get on / ride'},
+    {ar:'Enta bete-rkab', en:'you (m) get on / ride', verb:'Yerkab', verbEn:'to get on / ride'},
+    {ar:'Enty bete-rkaby', en:'you (f) get on / ride', verb:'Yerkab', verbEn:'to get on / ride'},
+    {ar:'Ana ba-geeb', en:'I bring', verb:'Yegeeb', verbEn:'to bring'},
+    {ar:'Enta bet-geeb', en:'you (m) bring', verb:'Yegeeb', verbEn:'to bring'},
+    {ar:'Enty bet-geeby', en:'you (f) bring', verb:'Yegeeb', verbEn:'to bring'},
+    {ar:'Ana ba-gri', en:'I run', verb:'Yegri', verbEn:'to run'},
+    {ar:'Enta bete-gri', en:'you (m) run', verb:'Yegri', verbEn:'to run'},
+    {ar:'Enty bete-gri', en:'you (f) run', verb:'Yegri', verbEn:'to run'},
+    {ar:'Ana ba-shtaghal', en:'I work', verb:'Yeshtaghal', verbEn:'to work'},
+    {ar:'Enta bete-shtaghal', en:'you (m) work', verb:'Yeshtaghal', verbEn:'to work'},
+    {ar:'Enty bete-shtaghaly', en:'you (f) work', verb:'Yeshtaghal', verbEn:'to work'},
+    {ar:'Ana ba-ftar', en:'I have breakfast', verb:'Yeftar', verbEn:'to have breakfast'},
+    {ar:'Enta bete-ftar', en:'you (m) have breakfast', verb:'Yeftar', verbEn:'to have breakfast'},
+    {ar:'Enty bete-ftary', en:'you (f) have breakfast', verb:'Yeftar', verbEn:'to have breakfast'},
+    {ar:'Ana ba-tghadda', en:'I have lunch', verb:'Yetghadda', verbEn:'to have lunch'},
+    {ar:'Enta bete-tghadda', en:'you (m) have lunch', verb:'Yetghadda', verbEn:'to have lunch'},
+    {ar:'Enty bete-tghaddy', en:'you (f) have lunch', verb:'Yetghadda', verbEn:'to have lunch'},
+    {ar:'Ana ba-t3ash-sha', en:'I have dinner', verb:'Yet3ash-sha', verbEn:'to have dinner'},
+    {ar:'Enta bete-tash-sha', en:'you (m) have dinner', verb:'Yet3ash-sha', verbEn:'to have dinner'},
+    {ar:'Enty bete-tash-shy', en:'you (f) have dinner', verb:'Yet3ash-sha', verbEn:'to have dinner'},
+    {ar:'Ana ba-l3ab', en:'I play', verb:'Yel3ab', verbEn:'to play'},
+    {ar:'Enta bete-l3ab', en:'you (m) play', verb:'Yel3ab', verbEn:'to play'},
+    {ar:'Enty bete-l3aby', en:'you (f) play', verb:'Yel3ab', verbEn:'to play'},
+    {ar:'Ana ba-2aabel', en:'I meet', verb:'Ye2aabel', verbEn:'to meet'},
+    {ar:'Enta bet-2aabel', en:'you (m) meet', verb:'Ye2aabel', verbEn:'to meet'},
+    {ar:'Enty bet-2aabely', en:'you (f) meet', verb:'Ye2aabel', verbEn:'to meet'},
+    {ar:'Ana ba-7tefel', en:'I celebrate', verb:'Ye7tefel', verbEn:'to celebrate'},
+    {ar:'Enta bete-7tefel', en:'you (m) celebrate', verb:'Ye7tefel', verbEn:'to celebrate'},
+    {ar:'Enty bete-7tefely', en:'you (f) celebrate', verb:'Ye7tefel', verbEn:'to celebrate'},
+    {ar:'Ana ba-khallas', en:'I finish', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Enta bet-khallas', en:'you (m) finish', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Enty bet-khallasy', en:'you (f) finish', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Howwa bey-khallas', en:'he finishes', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Heyya bet-khallas', en:'she finishes', verb:'Yekhallas', verbEn:'to finish'},
+    {ar:'Ana ba-tfarrag', en:'I watch', verb:'Yetfarrag 3ala', verbEn:'to watch (something)'},
+    {ar:'Ana ba-zoor', en:'I visit', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Enta bet-zoor', en:'you (m) visit', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Enty bet-zoory', en:'you (f) visit', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Howwa bey-zoor', en:'he visits', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Heyya bet-zoor', en:'she visits', verb:'Yezoor', verbEn:'to visit'},
+    {ar:'Ana Batla3', en:'I go upstairs / leave', verb:'Yetla3', verbEn:'to go upstairs / go out / leave (transport)'},
+    {ar:'Enta beteTla3', en:'you (m) go upstairs / leave', verb:'Yetla3', verbEn:'to go upstairs / go out / leave (transport)'},
+    {ar:'Enti BeteTla3y', en:'you (f) go upstairs / leave', verb:'Yetla3', verbEn:'to go upstairs / go out / leave (transport)'},
+    {ar:'Howa BeyeTla3', en:'he goes upstairs / leaves', verb:'Yetla3', verbEn:'to go upstairs / go out / leave (transport)'},
+    {ar:'Heyya BeteTla3', en:'she goes upstairs / leaves', verb:'Yetla3', verbEn:'to go upstairs / go out / leave (transport)'},
+    {ar:'Ana hatla3 agaaza', en:'I will go on vacation', verb:'Yetla3', verbEn:'to go upstairs / go out / leave (transport)'},
+    {ar:'Ana ba-krah', en:'I hate', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Enta bet-ekrah', en:'you (m) hate', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Enty bet-ekrahy', en:'you (f) hate', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Howwa bey-krah', en:'he hates', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Heyya bet-ekrah', en:'she hates', verb:'Yekrah', verbEn:'to hate'},
+    {ar:'Ana ba-naDDaf', en:'I clean', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Enta bet-naDDaf', en:'you (m) clean', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Enty bet-enaDDafy', en:'you (f) clean', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Howwa bey-naDDaf', en:'he cleans', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Heyya bet-naDDaf', en:'she cleans', verb:'YenaDDaf', verbEn:'to clean'},
+    {ar:'Ana ba-wsal', en:'I arrive', verb:'YewSal', verbEn:'to arrive'},
+    {ar:'Enta bete-wsal', en:'you (m) arrive', verb:'YewSal', verbEn:'to arrive'},
+    {ar:'Enty bete-wsaly', en:'you (f) arrive', verb:'YewSal', verbEn:'to arrive'},
+    {ar:'Howwa beye-wsal', en:'he arrives', verb:'YewSal', verbEn:'to arrive'},
+    {ar:'Heyya bete-wsal', en:'she arrives', verb:'YewSal', verbEn:'to arrive'},
+    {ar:'Ana ba-dres', en:'I study', verb:'Yedres', verbEn:'to study (in general)'},
+    {ar:'Enta bete-dres', en:'you (m) study', verb:'Yedres', verbEn:'to study (in general)'},
+    {ar:'Enty bet-edresy', en:'you (f) study', verb:'Yedres', verbEn:'to study (in general)'},
+    {ar:'Howwa bey-dres', en:'he studies', verb:'Yedres', verbEn:'to study (in general)'},
+    {ar:'Heyya bet-dres', en:'she studies', verb:'Yedres', verbEn:'to study (in general)'},
+    {ar:'Ana ba-shtery', en:'I buy', verb:'Yeshtery', verbEn:'to buy'},
+    {ar:'Enta bete-shtery', en:'you (m) buy', verb:'Yeshtery', verbEn:'to buy'},
+    {ar:'Enty bet-eshtery', en:'you (f) buy', verb:'Yeshtery', verbEn:'to buy'},
+    {ar:'Howwa bey-shtery', en:'he buys', verb:'Yeshtery', verbEn:'to buy'},
+    {ar:'Heyya bet-shtery', en:'she buys', verb:'Yeshtery', verbEn:'to buy'},
+    {ar:'Shaayef', en:'seeing / can see (m)', verb:'Shaayef', verbEn:'to see (active participle)'},
+    {ar:'Shayfa', en:'seeing / can see (f)', verb:'Shaayef', verbEn:'to see (active participle)'},
+    {ar:'Shayfeen', en:'seeing / can see (pl)', verb:'Shaayef', verbEn:'to see (active participle)'},
+    {ar:'Saaken', en:'living / residing (participle)', verb:'Saaken', verbEn:'to live / reside (active participle)'},
+    {ar:'Ana saaken (m)', en:'I live (m)', verb:'Saaken', verbEn:'to live / reside (active participle)'},
+    {ar:'Ana sakna (f)', en:'I live (f)', verb:'Saaken', verbEn:'to live / reside (active participle)'},
+    {ar:'Enta/howwa saaken', en:'you (m) / he live(s)', verb:'Saaken', verbEn:'to live / reside (active participle)'},
+    {ar:'Enty/heyya sakna', en:'you (f) / she live(s)', verb:'Saaken', verbEn:'to live / reside (active participle)'},
+  ]);
+
+  add(db, 'Career & Work', [
+    {ar:'waZeefa', en:'job'},
+    {ar:'elwa2t elfaaDy', en:'free time'},
+    {ar:'MowaZZaf/a', en:'employee'},
+    {ar:'doctoor/a', en:'doctor'},
+    {ar:'Saydaly/a', en:'pharmacist'},
+    {ar:'MomarreD/a', en:'nurse'},
+    {ar:'Tayyar', en:'pilot'},
+    {ar:'7okooma', en:'government'},
+    {ar:'mo7aaseb/a', en:'accountant'},
+    {ar:'mohandes/a', en:'engineer'},
+    {ar:'Morshed seyaa7y', en:'tour guide'},
+    {ar:'Morsheda seyaa7yy-a', en:'tour guide (f)'},
+    {ar:'Bayyaa3', en:'seller / salesman'},
+    {ar:'Modeer', en:'manager'},
+    {ar:'Sa7aafy', en:'journalist'},
+    {ar:'Eh a7san waZeefa fi Holanda?', en:'what is the best job in Holland?'},
+    {ar:'Ana bashtaghal fi sherket estesmaraat', en:'I work in an investment company'},
+  ]);
+
+  add(db, 'Store & Shopping', [
+    {ar:'Es-supermarket', en:'supermarket'},
+    {ar:'7agaat', en:'things'},
+    {ar:'Gebna', en:'cheese'},
+    {ar:'Zebda', en:'butter'},
+    {ar:'3aish', en:'bread'},
+    {ar:'BaiD', en:'eggs (plural)'},
+    {ar:'Kartoonet BaiD', en:'pack of eggs'},
+    {ar:'Zatoon', en:'olives'},
+    {ar:'Marabba', en:'jam'},
+    {ar:'Farawla', en:'strawberry'},
+    {ar:'Zabaady yoonaany', en:'Greek yoghurt'},
+    {ar:'7alaawa', en:'sesame sweets'},
+    {ar:'Kees', en:'plastic bag'},
+    {ar:'barTamaan', en:'jar'},
+    {ar:'3elba', en:'box / container'},
+    {ar:'Geneeh', en:'pound'},
+    {ar:'Alam', en:'pen'},
+    {ar:'Maktaba', en:'bookshop / library'},
+    {ar:'Ketaab', en:'book'},
+    {ar:'Kashkool', en:'notebook'},
+    {ar:'shanTa', en:'bag'},
+    {ar:'Wallaa3a', en:'lighter'},
+    {ar:'Sh-sham3a', en:'candle'},
+    {ar:'ennaDDara', en:'glasses'},
+    {ar:'El camera', en:'camera'},
+    {ar:'MaT3am', en:'restaurant'},
+    {ar:'Kushari', en:'kushari (dish)'},
+    {ar:'SalSa', en:'sauce'},
+    {ar:'Samak', en:'fish'},
+    {ar:'Ezaazet zeet', en:'cooking oil'},
+    {ar:'ga3aan/a', en:'hungry'},
+    {ar:'Kamaan', en:'as well / also'},
+    {ar:'Kaam', en:'how much / how many'},
+    {ar:'Alam gaaf', en:'unerasable pen'},
+    {ar:'alam roSaS', en:'pencil'},
+    {ar:'Enta bet7ebb es-supermarket?', en:'do you like the supermarket?'},
+    {ar:'Ana ba7eb es-supermarket', en:'I like the supermarket'},
+    {ar:'Ma ba7ebbesh', en:'I don\'t like it'},
+    {ar:'Mafeesh 7alaawa', en:'there\'s no 7alaawa'},
+    {ar:'3elbet 7alaawa', en:'a box of 7alaawa'},
+    {ar:'3elbet tuna', en:'a can of tuna'},
+    {ar:'El 7esaab kaam?', en:'how much does it cost?'},
+    {ar:'Be kaam…?', en:'how much is this…?'},
+    {ar:'3elbet zabaady', en:'a box of yoghurt'},
+    {ar:'Be khamsa geneeh', en:'it\'s 5 pounds'},
+    {ar:'Howwa 3aayez eh?', en:'what does he want?'},
+    {ar:'El 7esaab', en:'the total'},
+    {ar:'Alam gaaf w alam roSaS', en:'pen and pencil'},
+    {ar:'Arba3a ganeeh w noSS', en:'4.50 EGP'},
+    {ar:'Setta gneeh w noSS', en:'6.50 EGP'},
+    {ar:'etfaDDal/y', en:'here you go'},
+    {ar:'Ay khedma?', en:'how can I help you?'},
+    {ar:'3aayez ketaab le nagib ma7fooZ', en:'I want a book by Naguib Mahfouz'},
+    {ar:'Bekaam el ketaab da?', en:'how much is this book?'},
+    {ar:'Be sab3a geneeh', en:'7 EGP'},
+    {ar:'7aaga tanya?', en:'something else?'},
+    {ar:'3aayez ketaab le nawaal essa3dawy', en:'I want a book by Nawal El Saadawi'},
+    {ar:'Ennaas fi MaSr mabey7ebboosh nawaal essa3dawi', en:'people in Egypt don\'t like Nawal El Saadawi'},
+    {ar:'Leh 3andak wallaa3a?', en:'why do you have a lighter?'},
+    {ar:'Lesh-sham3', en:'for the candle'},
+    {ar:'bet-dakhan/y?', en:'do you smoke?'},
+    {ar:'Baklo koll yoom', en:'I eat it every day'},
+    {ar:'ennaDDara be khamseen geneh', en:'the glasses cost 50 EGP'},
+    {ar:'El camera be tes3een geneh', en:'the camera costs 90 EGP'},
+    {ar:'esh-shnTa be talaata w sab3een', en:'the bag costs 73 EGP'},
+    {ar:'El alam be 3eshreen geneh w noSS', en:'the pen costs 20.50 EGP'},
+    {ar:'El walla3a be setta gneeh w rob3', en:'the lighter costs 6.25 EGP'},
+    {ar:'Nemret telefonak/ek kaam?', en:'what\'s your phone number?'},
+    {ar:'raKam mobilak/ek kaam?', en:'what\'s your phone number? (modern)'},
+    {ar:'Aywa ya fandem', en:'yes, sir/madam'},
+    {ar:'3ayez taakol eh?', en:'what do you want to eat?'},
+    {ar:'2 kushari kebeer be SalSa 7arra', en:'2 large kushari with spicy sauce'},
+    {ar:'Teshrab eh?', en:'what do you want to drink?'},
+    {ar:'etneen w tamaneen geneeh', en:'82 EGP'},
+    {ar:'La2, 3aish', en:'no, bread'},
+    {ar:'Alo', en:'hi (on the phone)'},
+    {ar:'MaT3am etta7rir?', en:'Tahrir restaurant?'},
+  ]);
+
+  add(db, 'Family', [
+    {ar:'Bnaat', en:'daughters / girls'},
+    {ar:'Welaad', en:'sons / boys'},
+    {ar:'Osra', en:'family (household)'},
+    {ar:'3aila', en:'family (extended)'},
+    {ar:'Mama', en:'mom (informal)'},
+    {ar:'Mamty', en:'my mom'},
+    {ar:'Baba', en:'dad (informal)'},
+    {ar:'babaaya', en:'my dad'},
+    {ar:'Babaak', en:'your dad (m)'},
+    {ar:'Babaaky', en:'your dad (f)'},
+    {ar:'Omm', en:'mother'},
+    {ar:'Abb', en:'father'},
+    {ar:'Waldy', en:'my father (formal)'},
+    {ar:'Waldety', en:'my mother (formal)'},
+    {ar:'Akh', en:'brother'},
+    {ar:'Okht', en:'sister'},
+    {ar:'Ekhwaat', en:'siblings'},
+    {ar:'Okhtain', en:'two sisters'},
+    {ar:'Ibn', en:'son'},
+    {ar:'Bent', en:'daughter / girl'},
+    {ar:'3amm', en:'uncle (father\'s side)'},
+    {ar:'3amma', en:'aunt (father\'s side)'},
+    {ar:'3ammi', en:'my uncle'},
+    {ar:'Khaal', en:'uncle (mother\'s side)'},
+    {ar:'Khaala', en:'aunt (mother\'s side)'},
+    {ar:'Kebeer', en:'old / big'},
+    {ar:'akbar', en:'older (comparative)'},
+    {ar:'soghayyar', en:'young / small'},
+    {ar:'aSghar', en:'younger'},
+    {ar:'Ana el akh el kebeer / ana el akbar', en:'I\'m the oldest (brother)'},
+    {ar:'Fi ennoS', en:'in the middle'},
+  ]);
+
+  add(db, 'Kitchen', [
+    {ar:'MaTbakh', en:'kitchen'},
+    {ar:'Tal-laaga', en:'fridge'},
+    {ar:'Tarabaiza', en:'table'},
+    {ar:'Fingaan', en:'coffee/tea cup'},
+    {ar:'3\'allaya', en:'kettle'},
+    {ar:'Botagaas', en:'stove'},
+    {ar:'Dorg', en:'drawer'},
+    {ar:'7alla', en:'pan (olla)'},
+    {ar:'Tasa', en:'frying pan'},
+    {ar:'Doolaab', en:'cupboard'},
+    {ar:'Doolaab el maTbakh', en:'kitchen cupboard'},
+    {ar:'7ooD', en:'sink'},
+    {ar:'Matbakhak feh eh?', en:'what\'s in your kitchen?'},
+    {ar:'Ma3la2a', en:'spoon'},
+    {ar:'Shooka', en:'fork'},
+    {ar:'Sekeena', en:'knife'},
+  ]);
+
+  add(db, 'Classroom', [
+    {ar:'dars dedeed', en:'a new lesson'},
+    {ar:'FasI', en:'classroom / season'},
+    {ar:'Tarabieza', en:'student'},
+    {ar:'Keshkool', en:'notebook'},
+    {ar:'7aiTa', en:'wall'},
+    {ar:'See3a', en:'watch'},
+    {ar:'Sheb-baak', en:'window'},
+    {ar:'Maktab', en:'desk'},
+    {ar:'Korsy', en:'chair'},
+    {ar:'Modarres/a', en:'teacher'},
+    {ar:'3andak kaam sheb-baak?', en:'how many windows do you have?'},
+    {ar:'3ashaan maktaby kebeer', en:'because my desk is big'},
+  ]);
+
+  add(db, 'Weather', [
+    {ar:'El-gaww 3aamel eh 3andak/ek?', en:'how\'s the weather there?'},
+    {ar:'El gaw bard?', en:'is the weather cold?'},
+    {ar:'Bard', en:'cold'},
+    {ar:'7arr', en:'hot'},
+    {ar:'daafi', en:'warm'},
+    {ar:'Shams', en:'sun'},
+    {ar:'MaTar', en:'rain'},
+    {ar:'Meghayyem', en:'cloudy'},
+    {ar:'Eddonya betmaTTar', en:'it\'s raining'},
+    {ar:'Daraget el 7araara kaam?', en:'what\'s the temperature?'},
+    {ar:'Fi daraget el 7araara 23', en:'it\'s 23 degrees'},
+  ]);
+
+  add(db, 'Positions', [
+    {ar:'3ala', en:'on'},
+    {ar:'Foo2', en:'on top'},
+    {ar:'ta7t', en:'under'},
+    {ar:'Ganb', en:'next to'},
+    {ar:'2oddaam', en:'in front'},
+    {ar:'Waraa', en:'behind'},
+    {ar:'Bain', en:'between'},
+    {ar:'Gowwa', en:'inside'},
+    {ar:'Fi', en:'in'},
+    {ar:'Henaa', en:'here'},
+    {ar:'Henaak', en:'there'},
+  ]);
+
+
+  saveDB(db);
+  localStorage.setItem(VOCAB_VERSION_KEY, CURRENT_VOCAB_VERSION);
+  return db;
+}
+
+function add(db, cat, items) {
+  if (!db.categories[cat]) db.categories[cat] = [];
+  const existing = new Set(db.categories[cat].map(i => norm(i.ar)));
+  items.forEach(item => {
+    if (!existing.has(norm(item.ar))) {
+      db.categories[cat].push(item);
+      existing.add(norm(item.ar));
+    }
+  });
+}
+
+function norm(s) { return s.toLowerCase().replace(/\s+/g,''); }
+
+// ============================================================
+// STATE
+// ============================================================
+let db = initDB();
+let srs = loadSRS();
+
+// One-time data fix: several "Useful Phrases" entries had Arabic/English swapped.
+// This remaps existing review progress from the old (wrong) keys to the corrected
+// keys so no SRS history/streaks are lost when the data is fixed.
+(function migrateSwappedUsefulPhrases(srs) {
+  const remap = [
+    ['Barcelona is crowded', 'Barcelona za7ma'],
+    ['friends (formal) / So7aab  (informal)', 'AS7aab'],
+    ['friend', 'Saa7eb'],
+    ['Female friend', 'Sa7ba'],
+    ['my friend', 'Sa7bi'],
+    ['language', 'Lugha'],
+    ['another language', 'Lugha tanya'],
+    ['do you remember what is?', 'Faaker ya3ni eh'],
+    ['the money', 'el floos'],
+    ['woman', 'Sett'],
+    ['man', 'Raagel'],
+    ['Do you have a question', '3andak so2aal?'],
+    ['but', 'bass'],
+    ['or (only in a question)', 'walla'],
+    ['you were  / I was', 'Kont'],
+  ];
+  let migrated = false;
+  remap.forEach(([oldAr, newAr]) => {
+    const oldKey = norm(oldAr);
+    const newKey = norm(newAr);
+    if (oldKey === newKey || !srs[oldKey]) return;
+    if (srs[newKey]) {
+      if ((srs[oldKey].totalReviews || 0) > (srs[newKey].totalReviews || 0)) {
+        srs[newKey] = srs[oldKey];
+      }
+    } else {
+      srs[newKey] = srs[oldKey];
+    }
+    delete srs[oldKey];
+    migrated = true;
+  });
+  if (migrated) saveSRS(srs);
+})(srs);
+
+let meta = loadMeta();
+let currentTab = 'browse';
+
+// SRS state
+let srsDueQueue = [];
+let srsCurrentIndex = 0;
+let srsFlipped = false;
+let srsSessionDone = 0;
+let srsSessionTotal = 0;
+let srsUndoStack = [];
+let srsUnlimited = false;
+let srsCategory = 'All'; // legacy single-category filter
+let srsCatFilter = JSON.parse(localStorage.getItem('masri_cat_filter') || '{"mode":"all","cats":[]}');
+let reviewDirection = localStorage.getItem('masri_review_direction') || 'ar2en'; // 'ar2en' or 'en2ar'
+
+// ============================================================
+// SRS ENGINE — Anki-style SM-2
+// ============================================================
+// Card states: 'new' | 'learning' | 'review'
+// Learning steps: show again after 1 min, then 10 min, then graduate to review
+// Review: SM-2 intervals, ease factor, lapses tracked
+// Daily limit: 50 NEW cards per day (reviews are always shown regardless)
+// ============================================================
+
+const DAILY_NEW_LIMIT = 50;
+const DAILY_REVIEW_CAP = 50; // max cards shown per session before "Continue" prompt
+const NEW_RATIO = 0.3; // reserve at least 30% of a capped session for new words, when available
+// Learning steps in days (fractional ok): 0 = same day
+const LEARN_STEPS = [1, 6]; // first review after 1 day, then 6 days = Anki default
+
+function srsKey(item) { return norm(item.ar); }
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function getSRSCard(item) {
+  const k = srsKey(item);
+  if (!srs[k]) srs[k] = {
+    state: 'new',       // new | learning | review
+    interval: 0,        // days until next review
+    easeFactor: 2.5,    // multiplier (min 1.3)
+    dueDate: todayStr(),
+    step: 0,            // learning step index
+    reps: 0,            // successful reviews (graduated)
+    lapses: 0,          // times forgotten after graduation
+    totalReviews: 0,
+    newSeenDate: null,  // date this card was first introduced
+  };
+  return srs[k];
+}
+
+// rating: 0=Again, 1=Hard, 2=Good, 3=Easy
+function applyRating(item, rating) {
+  const card = getSRSCard(item);
+  card.totalReviews++;
+
+  const today = todayStr();
+  const setDue = (days) => {
+    const d = new Date();
+    d.setDate(d.getDate() + Math.max(1, Math.round(days)));
+    card.dueDate = d.toISOString().slice(0,10);
+    card.interval = Math.max(1, Math.round(days));
+  };
+
+  if (card.state === 'new' || card.state === 'learning') {
+    if (rating === 0) {
+      // Again — restart learning
+      card.step = 0;
+      card.state = 'learning';
+      card.dueDate = today; // show again today
+      card.interval = 0;
+      card.lapses = (card.lapses || 0) + 1;
+    } else if (rating === 3) {
+      // Easy — immediately graduate
+      card.state = 'review';
+      card.reps = 1;
+      setDue(4); // jump to 4 days
+    } else {
+      // Hard or Good — advance step
+      card.step = Math.min(card.step + 1, LEARN_STEPS.length - 1);
+      if (card.step >= LEARN_STEPS.length - 1 && rating === 2) {
+        // Graduated after completing all steps
+        card.state = 'review';
+        card.reps = 1;
+        setDue(LEARN_STEPS[LEARN_STEPS.length - 1]);
+      } else {
+        card.state = 'learning';
+        setDue(LEARN_STEPS[card.step]);
+      }
+    }
+    if (!card.newSeenDate) card.newSeenDate = today;
+
+  } else {
+    // Review card — SM-2
+    if (rating === 0) {
+      // Again — lapse, back to learning
+      card.lapses++;
+      card.state = 'learning';
+      card.step = 0;
+      card.dueDate = today;
+      card.interval = 0;
+      card.easeFactor = Math.max(1.3, card.easeFactor - 0.2);
+    } else {
+      // Hard / Good / Easy
+      const efDelta = rating === 1 ? -0.15 : rating === 2 ? 0 : 0.15;
+      card.easeFactor = Math.max(1.3, card.easeFactor + efDelta);
+
+      let newInterval;
+      if (card.reps === 1) {
+        newInterval = rating === 1 ? 4 : rating === 2 ? 6 : 8; // second review
+      } else {
+        const base = card.interval * card.easeFactor;
+        newInterval = rating === 1 ? card.interval * 1.2 : base;
+        if (rating === 3) newInterval = base * 1.3; // Easy bonus
+      }
+      // Add small random fuzz (±5%) to prevent cards clumping
+      newInterval *= (0.95 + Math.random() * 0.1);
+      setDue(newInterval);
+      card.reps++;
+    }
+  }
+
+  srs[srsKey(item)] = card;
+  saveSRS(srs);
+}
+
+function getNewSeenTodayCount() {
+  const today = todayStr();
+  return Object.values(srs).filter(c => c.newSeenDate === today).length;
+}
+
+function getDuePool(category = 'All') {
+  const today = todayStr();
+  // Build a map of category -> items, instead of one flattened list, so we
+  // can round-robin new-word selection across categories further down.
+  let categoryMap;
+  if (typeof srsCatFilter !== 'undefined' && srsCatFilter.mode !== 'all') {
+    categoryMap = {};
+    Object.entries(db.categories).forEach(([cat, items]) => {
+      if (filterMatchesCategory(cat)) categoryMap[cat] = items;
+    });
+  } else if (category !== 'All') {
+    categoryMap = { [category]: db.categories[category] || [] };
+  } else {
+    categoryMap = db.categories;
+  }
+  const newSeenToday = getNewSeenTodayCount();
+
+  const reviews = [];
+  const newByCategory = []; // one array of unseen items per category, category order preserved
+
+  Object.values(categoryMap).forEach(items => {
+    const catNew = [];
+    items.forEach(item => {
+      const k = srsKey(item);
+      if (!srs[k]) {
+        catNew.push(item);
+      } else {
+        const card = srs[k];
+        if (card.dueDate <= today) {
+          if (card.state === 'new' || (card.state === 'learning' && card.reps === 0)) {
+            catNew.push(item);
+          } else {
+            reviews.push(item);
+          }
+        }
+      }
+    });
+    if (catNew.length) newByCategory.push(catNew);
+  });
+
+  // Round-robin across categories: take one unseen word from each category in
+  // turn, so a big category (e.g. Verb Conjugations) can't hog the whole daily
+  // new-word allowance while a smaller one (e.g. Kitchen) never gets picked.
+  const newCards = [];
+  let idx = 0;
+  while (newByCategory.some(arr => idx < arr.length)) {
+    newByCategory.forEach(arr => {
+      if (idx < arr.length) newCards.push(arr[idx]);
+    });
+    idx++;
+  }
+
+  const newAllowed = Math.max(0, DAILY_NEW_LIMIT - newSeenToday);
+  const limitedNew = newCards.slice(0, newAllowed);
+  return { reviews, newCards, limitedNew };
+}
+
+function getDueItems(unlimited = false, category = 'All') {
+  const pool = getDuePool(category);
+  if (unlimited) {
+    return [...pool.reviews, ...pool.newCards];
+  }
+  const totalAvailable = pool.reviews.length + pool.limitedNew.length;
+  if (totalAvailable <= DAILY_REVIEW_CAP) {
+    // Everything fits in one session, no need to ration anything.
+    return [...pool.reviews, ...pool.limitedNew];
+  }
+  // Reserve at least NEW_RATIO of the session for new words, if that many are
+  // actually available today; otherwise just top the session up with reviews.
+  const minNewSlots = Math.min(pool.limitedNew.length, Math.ceil(DAILY_REVIEW_CAP * NEW_RATIO));
+  const reviewSlots = Math.min(pool.reviews.length, DAILY_REVIEW_CAP - minNewSlots);
+  const leftoverSlots = DAILY_REVIEW_CAP - reviewSlots - minNewSlots;
+  const newSlots = Math.min(pool.limitedNew.length, minNewSlots + leftoverSlots);
+  return [...pool.reviews.slice(0, reviewSlots), ...pool.limitedNew.slice(0, newSlots)];
+}
+
+function getTotalDueCount(category = 'All') {
+  const pool = getDuePool(category);
+  return pool.reviews.length + pool.limitedNew.length;
+}
+
+function getReviewsBeyondCapCount(category = 'All') {
+  return Math.max(0, getTotalDueCount(category) - DAILY_REVIEW_CAP);
+}
+
+function getMasteredCount() {
+  return Object.values(srs).filter(c => c.state === 'review' && c.interval >= 21).length;
+}
+
+function getWeakItems() {
+  const all = Object.values(db.categories).flat();
+  // Dedupe by srsKey so duplicate vocab entries (same Arabic) only show once
+  const seen = new Set();
+  const unique = [];
+  for (const item of all) {
+    const k = srsKey(item);
+    if (seen.has(k)) continue;
+    if (srs[k] && srs[k].lapses > 0) {
+      seen.add(k);
+      unique.push(item);
+    }
+  }
+  return unique
+    .sort((a,b) => (srs[srsKey(b)].lapses||0) - (srs[srsKey(a)].lapses||0))
+    .slice(0, 8);
+}
+
+function updateStreak() {
+  const today = todayStr();
+  if (!Array.isArray(meta.daysUsed)) meta.daysUsed = meta.lastStudyDate ? [meta.lastStudyDate] : [];
+  if (meta.daysUsed.includes(today)) return; // already counted today
+  meta.daysUsed.push(today);
+  meta.daysUsed.sort();
+  meta.lastStudyDate = today;
+  meta.streak = meta.daysUsed.length; // total distinct days used, not a consecutive streak
+  saveMeta(meta);
+}
+
+function updateNavBadge() {
+  const due = getDueItems().length;
+  const badge = document.getElementById('navDueBadge');
+  if (due > 0) {
+    badge.textContent = due;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(tab) {
+  currentTab = tab;
+  ['browse','review','upload'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('nav button').forEach((b,i) => {
+    b.classList.toggle('active', ['browse','review','upload'][i]===tab);
+  });
+  if (tab==='browse') { renderBrowse(); renderCleanupVisibility(); }
+  if (tab==='upload') renderCleanupVisibility();
+  if (tab==='review') initReview();
+}
+
+// ============================================================
+// REVIEW (SRS)
+// ============================================================
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function initReview(unlimited = false) {
+  srsUnlimited = unlimited;
+  srsDueQueue = shuffleArray(getDueItems(unlimited, srsCategory));
+  srsCurrentIndex = 0;
+  srsSessionDone = 0;
+  srsSessionTotal = srsDueQueue.length;
+  srsUndoStack = [];
+  renderSRSCategorySelector();
+  renderSRSStats();
+  renderSRSCard();
+  renderWeakWords();
+  updateDirectionButtons();
+}
+
+function renderSRSCategorySelector() {
+  const sel = document.getElementById('reviewCatSelect');
+  if (!sel) return;
+  const cats = Object.keys(db.categories).sort();
+  const cs = new Set(srsCatFilter.cats);
+  let modeLabel = '';
+  if (srsCatFilter.mode === 'only') modeLabel = `Only: ${srsCatFilter.cats.length}`;
+  else if (srsCatFilter.mode === 'except') modeLabel = `Except: ${srsCatFilter.cats.length}`;
+  else modeLabel = 'All categories';
+
+  sel.innerHTML = `
+    <div style="width:100%;display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;font-size:0.7rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.05em;flex-wrap:wrap">
+      <span>${modeLabel}</span>
+      ${srsCatFilter.mode !== 'all' ? '<button class="deck-btn" style="font-size:0.65rem;padding:0.2rem 0.5rem" onclick="clearCatFilter()">Reset</button>' : ''}
+      <span style="margin-left:auto;font-size:0.6rem;text-transform:none">Click=include · Click again=exclude · Again=clear</span>
+    </div>
+  ` + cats.map(c => {
+    let state = 'off';
+    if (srsCatFilter.mode === 'only' && cs.has(c)) state = 'include';
+    else if (srsCatFilter.mode === 'except' && cs.has(c)) state = 'exclude';
+    const styles = {
+      off: '',
+      include: 'background:rgba(74,103,65,0.15);border-color:var(--moss);color:var(--moss)',
+      exclude: 'background:rgba(184,74,44,0.12);border-color:var(--rust);color:var(--rust);text-decoration:line-through',
+    };
+    const icon = state === 'include' ? '✓ ' : state === 'exclude' ? '✗ ' : '';
+    return `<button class="deck-btn" style="${styles[state]}" onclick="toggleCatFilter('${c.replace(/'/g, "\\'")}')">${icon}${c}</button>`;
+  }).join('');
+}
+
+function selectReviewCategory(cat) {
+  srsCategory = cat;
+  initReview(false);
+}
+
+function toggleCatFilter(cat) {
+  const cats = new Set(srsCatFilter.cats);
+  if (srsCatFilter.mode === 'all') {
+    srsCatFilter = { mode: 'only', cats: [cat] };
+  } else if (srsCatFilter.mode === 'only') {
+    if (cats.has(cat)) {
+      cats.delete(cat);
+      if (cats.size === 0) srsCatFilter = { mode: 'except', cats: [cat] };
+      else srsCatFilter = { mode: 'only', cats: Array.from(cats) };
+    } else {
+      cats.add(cat);
+      srsCatFilter = { mode: 'only', cats: Array.from(cats) };
+    }
+  } else if (srsCatFilter.mode === 'except') {
+    if (cats.has(cat)) {
+      cats.delete(cat);
+      if (cats.size === 0) srsCatFilter = { mode: 'all', cats: [] };
+      else srsCatFilter = { mode: 'except', cats: Array.from(cats) };
+    } else {
+      cats.add(cat);
+      srsCatFilter = { mode: 'except', cats: Array.from(cats) };
+    }
+  }
+  localStorage.setItem('masri_cat_filter', JSON.stringify(srsCatFilter));
+  initReview(false);
+}
+
+function clearCatFilter() {
+  srsCatFilter = { mode: 'all', cats: [] };
+  localStorage.setItem('masri_cat_filter', JSON.stringify(srsCatFilter));
+  initReview(false);
+}
+
+function filterMatchesCategory(cat) {
+  if (srsCatFilter.mode === 'all') return true;
+  if (srsCatFilter.mode === 'only') return srsCatFilter.cats.includes(cat);
+  if (srsCatFilter.mode === 'except') return !srsCatFilter.cats.includes(cat);
+  return true;
+}
+
+function setReviewDirection(dir) {
+  if (dir !== 'ar2en' && dir !== 'en2ar') return;
+  reviewDirection = dir;
+  localStorage.setItem('masri_review_direction', dir);
+  updateDirectionButtons();
+  renderSRSCard();
+}
+
+function updateDirectionButtons() {
+  const a = document.getElementById('dirBtnAr2En');
+  const e = document.getElementById('dirBtnEn2Ar');
+  if (a) a.classList.toggle('selected', reviewDirection === 'ar2en');
+  if (e) e.classList.toggle('selected', reviewDirection === 'en2ar');
+}
+
+function renderSRSStats() {
+  const sessionDue = getDueItems(false, srsCategory).length;
+  const totalDue = getTotalDueCount(srsCategory);
+  document.getElementById('srsDueCount').textContent = sessionDue;
+  const labelEl = document.getElementById('srsDueLabel');
+  const extraEl = document.getElementById('srsDueExtra');
+  if (labelEl && extraEl) {
+    if (totalDue > sessionDue) {
+      labelEl.textContent = "Today's batch";
+      extraEl.textContent = `${totalDue - sessionDue} more available`;
+    } else {
+      labelEl.textContent = 'Due today';
+      extraEl.textContent = '';
+    }
+  }
+  document.getElementById('srsStreak').textContent = meta.streak || 0;
+  document.getElementById('srsMastered').textContent = getMasteredCount();
+  document.getElementById('srsNewToday').textContent = getNewSeenTodayCount();
+  updateNavBadge();
+}
+
+function renderSRSCard() {
+  const area = document.getElementById('srsCardArea');
+
+  if (!srsDueQueue.length) {
+    const pool = srsCategory === 'All' ? Object.values(db.categories).flat() : (db.categories[srsCategory] || []);
+    const newRemaining = pool.filter(i => !srs[srsKey(i)]).length;
+    const newSeenToday = getNewSeenTodayCount();
+    const totalStillDue = getTotalDueCount(srsCategory);
+    const catLabel = srsCategory === 'All' ? '' : ` in <strong>${srsCategory}</strong>`;
+    area.innerHTML = `
+      <div class="srs-empty">
+        <div class="srs-empty-icon">✓</div>
+        <div class="srs-empty-title">All caught up${srsCategory !== 'All' ? ' — ' + srsCategory : ' for today'}!</div>
+        <div class="srs-empty-sub">No cards due right now${catLabel}.<br>
+        ${newSeenToday > 0 ? `<span style="color:var(--gold);font-size:0.8rem;margin-top:0.5rem;display:block">${newSeenToday} new cards introduced today</span>` : ''}
+        ${newRemaining > 0 ? `<span style="color:var(--mist);font-size:0.75rem;display:block;margin-top:0.3rem">${newRemaining} unseen cards remaining</span>` : ''}
+        </div>
+        ${totalStillDue > 0 ? `<button class="ctrl-btn" style="margin-top:1rem" onclick="initReview(false)">Continue (next batch of ${DAILY_REVIEW_CAP})</button>` : ''}
+        ${newRemaining > 0 && totalStillDue === 0 ? `<button class="ctrl-btn ghost" style="margin-top:1rem" onclick="initReview(true)">Continue with more new cards (+${Math.min(newRemaining,DAILY_REVIEW_CAP)})</button>` : ''}
+      </div>`;
+    return;
+  }
+
+  if (srsCurrentIndex >= srsDueQueue.length) {
+    const remaining = getDueItems(false, srsCategory).length; // in current capped batch
+    const totalStillDue = getTotalDueCount(srsCategory);
+    const pool = srsCategory === 'All' ? Object.values(db.categories).flat() : (db.categories[srsCategory] || []);
+    const newRemaining = pool.filter(i => !srs[srsKey(i)]).length;
+    area.innerHTML = `
+      <div class="srs-empty">
+        <div class="srs-empty-icon">🎉</div>
+        <div class="srs-empty-title">Session complete!</div>
+        <div class="srs-empty-sub">You reviewed <strong>${srsSessionDone}</strong> cards.
+        ${totalStillDue > 0 ? `<br><span style="color:var(--mist);font-size:0.75rem">${totalStillDue} more cards still due</span>` : '<br><span style="color:var(--moss)">All due cards done! 🌿</span>'}
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin-top:1rem">
+          ${totalStillDue > 0 ? `<button class="ctrl-btn" onclick="initReview(false)">Continue (next batch, up to ${DAILY_REVIEW_CAP})</button>` : ''}
+          ${totalStillDue > DAILY_REVIEW_CAP ? `<button class="ctrl-btn ghost" onclick="initReview(true)">Do all (${totalStillDue})</button>` : ''}
+          ${totalStillDue === 0 && newRemaining > 0 ? `<button class="ctrl-btn ghost" onclick="initReview(true)">Keep going — more new cards (+${Math.min(newRemaining,DAILY_REVIEW_CAP)})</button>` : ''}
+        </div>
+      </div>`;
+    renderSRSStats();
+    renderWeakWords();
+    return;
+  }
+
+  const item = srsDueQueue[srsCurrentIndex];
+  const card = getSRSCard(item);
+  const progress = (srsCurrentIndex / srsDueQueue.length * 100);
+
+  // Compute interval previews for buttons
+  function previewInterval(rating) {
+    const c = {...card};
+    if (c.state === 'new' || c.state === 'learning') {
+      if (rating === 0) return 'today';
+      if (rating === 3) return '4d';
+      const nextStep = Math.min(c.step + 1, LEARN_STEPS.length - 1);
+      return LEARN_STEPS[nextStep] + 'd';
+    } else {
+      if (rating === 0) return 'today';
+      if (rating === 1) return c.reps === 1 ? '4d' : Math.round(c.interval * 1.2) + 'd';
+      if (rating === 2) return c.reps === 1 ? '6d' : Math.round(c.interval * c.easeFactor) + 'd';
+      if (rating === 3) return c.reps === 1 ? '8d' : Math.round(c.interval * c.easeFactor * 1.3) + 'd';
+    }
+  }
+
+  const stateBadge = card.state === 'new'
+    ? `<span style="background:rgba(220,123,64,0.15);color:var(--rust);font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:8px;border:1px solid var(--rust)">new</span>`
+    : card.state === 'learning'
+    ? `<span style="background:rgba(220,123,64,0.1);color:var(--gold);font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:8px;border:1px solid var(--gold)">learning</span>`
+    : `<span style="background:rgba(31,62,48,0.1);color:var(--moss);font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:8px;border:1px solid var(--moss)">review · ${card.interval}d</span>`;
+
+  area.innerHTML = `
+    <div style="width:100%;max-width:520px">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${progress}%"></div></div>
+      <div style="font-size:0.68rem;color:var(--mist);text-align:right;margin-top:0.3rem">${srsCurrentIndex+1} / ${srsDueQueue.length}</div>
+    </div>
+    <div class="card-wrapper" onclick="srsFlipCard()" id="srsCardWrapper">
+      <div class="card-inner" id="srsCardInner">
+        ${reviewDirection === 'ar2en' ? `
+        <div class="card-face card-front">
+          <div class="card-label">Arabic — tap to reveal</div>
+          <div class="card-arabic">${item.ar}</div>
+          <div style="margin-top:0.75rem">${stateBadge}</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-label">How well did you know it?</div>
+          <div class="card-english">${item.en}</div>
+          <div class="card-arabic" style="font-size:1.2rem;margin-top:0.4rem">${item.ar}</div>
+        </div>
+        ` : `
+        <div class="card-face card-front">
+          <div class="card-label">English — tap to reveal</div>
+          <div class="card-english">${item.en}</div>
+          <div style="margin-top:0.75rem">${stateBadge}</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-label">How well did you know it?</div>
+          <div class="card-arabic">${item.ar}</div>
+          <div class="card-english" style="font-size:0.95rem;margin-top:0.4rem">${item.en}</div>
+        </div>
+        `}
+      </div>
+    </div>
+    <div class="rating-btns" id="srsRatingBtns" style="display:none">
+      <button class="rate-btn rate-again" onclick="rateSRS(0)">Again <span style="opacity:0.45;font-size:0.6rem">[Q]</span><br><span style="font-size:0.6rem;opacity:0.7">${previewInterval(0)}</span></button>
+      <button class="rate-btn rate-hard" onclick="rateSRS(1)">Hard <span style="opacity:0.45;font-size:0.6rem">[W]</span><br><span style="font-size:0.6rem;opacity:0.7">${previewInterval(1)}</span></button>
+      <button class="rate-btn rate-good" onclick="rateSRS(2)">Good <span style="opacity:0.45;font-size:0.6rem">[O]</span><br><span style="font-size:0.6rem;opacity:0.7">${previewInterval(2)}</span></button>
+      <button class="rate-btn rate-easy" onclick="rateSRS(3)">Easy <span style="opacity:0.45;font-size:0.6rem">[P]</span><br><span style="font-size:0.6rem;opacity:0.7">${previewInterval(3)}</span></button>
+    </div>
+    <div id="srsFlipHint" style="font-size:0.68rem;color:var(--mist)">tap card to reveal — or press <kbd style="font-family:'Manrope',sans-serif;background:var(--papyrus);border:1px solid rgba(0,0,0,0.15);border-radius:3px;padding:0.1rem 0.35rem;font-size:0.65rem">space</kbd></div>
+    <div style="display:flex;gap:0.4rem;justify-content:center;flex-wrap:wrap;margin-top:0.4rem">
+      <button class="ctrl-btn ghost" style="font-size:0.7rem;padding:0.4rem 0.9rem;opacity:0.85" onclick="undoSRS()" title="Undo last rating (or press Z)">↩ Undo</button>
+      <button class="ctrl-btn ghost" style="font-size:0.7rem;padding:0.4rem 0.9rem;opacity:0.85" onclick="editCurrentSRSCard()" title="Edit this card">✎ Edit</button>
+      <button class="ctrl-btn ghost" style="font-size:0.7rem;padding:0.4rem 0.9rem;opacity:0.75" onclick="deleteCurrentSRSCard()" title="Permanently remove this card from your vocab">🗑 Delete</button>
+    </div>
+  `;
+}
+
+function srsFlipCard() {
+  const inner = document.getElementById('srsCardInner');
+  if (!inner) return;
+  inner.classList.add('flipped');
+  document.getElementById('srsRatingBtns').style.display = 'flex';
+  document.getElementById('srsFlipHint').style.display = 'none';
+  updateStreak();
+}
+
+function rateSRS(rating) {
+  const item = srsDueQueue[srsCurrentIndex];
+
+  // Save snapshot for undo (deep copy the card state before applying rating)
+  const cardKey = srsKey(item);
+  const cardBefore = JSON.parse(JSON.stringify(srs[cardKey] || null));
+  srsUndoStack.push({
+    item,
+    cardBefore,
+    queueLength: srsDueQueue.length,
+    sessionDone: srsSessionDone,
+    rating,
+  });
+  // Keep undo stack small
+  if (srsUndoStack.length > 10) srsUndoStack.shift();
+
+  applyRating(item, rating);
+  srsSessionDone++;
+
+  if (rating === 0) {
+    srsDueQueue.push(item);
+  }
+
+  srsCurrentIndex++;
+  renderSRSStats();
+  renderSRSCard();
+  renderWeakWords();
+}
+
+function undoSRS() {
+  if (!srsUndoStack.length) { toast('Nothing to undo'); return; }
+
+  const snap = srsUndoStack.pop();
+
+  // Restore card state
+  if (snap.cardBefore) {
+    srs[srsKey(snap.item)] = snap.cardBefore;
+  } else {
+    delete srs[srsKey(snap.item)];
+  }
+  saveSRS(srs);
+
+  // Restore queue position
+  if (snap.rating === 0) srsDueQueue.pop(); // remove the re-queued "again" copy
+  srsCurrentIndex--;
+  srsSessionDone = snap.sessionDone;
+
+  renderSRSStats();
+  renderSRSCard();
+  renderWeakWords();
+  toast('↩ Undone');
+}
+
+function renderWeakWords() {
+  const weak = getWeakItems();
+  const section = document.getElementById('srsWeakSection');
+  const list = document.getElementById('srsWeakList');
+  if (!weak.length) { section.style.display = 'none'; return; }
+  section.style.display = 'flex';
+  list.innerHTML = `<div class="weak-list-title">⚠ Trouble words</div>` +
+    weak.map(item => {
+      const c = srs[srsKey(item)];
+      return `<div class="weak-row">
+        <span class="weak-ar">${item.ar}</span>
+        <span class="weak-en">${item.en}</span>
+        <span class="weak-badge">${c.lapses} ✗</span>
+      </div>`;
+    }).join('');
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function exportData() {
+  const payload = {
+    version: 2,
+    exportDate: new Date().toISOString(),
+    vocab: db,
+    srsProgress: srs,
+    meta: meta,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'masri_backup_' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded!');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      let vocabAdded = 0, srsImported = 0;
+
+      // merge vocab
+      if (payload.vocab && payload.vocab.categories) {
+        Object.entries(payload.vocab.categories).forEach(([cat, items]) => {
+          const before = (db.categories[cat]||[]).length;
+          add(db, cat, items);
+          vocabAdded += (db.categories[cat].length - before);
+        });
+        saveDB(db);
+      }
+
+      // merge SRS (imported progress wins if more reviews)
+      if (payload.srsProgress) {
+        Object.entries(payload.srsProgress).forEach(([k, v]) => {
+          if (!srs[k] || (v.totalReviews||0) > (srs[k].totalReviews||0)) {
+            srs[k] = v;
+            srsImported++;
+          }
+        });
+        saveSRS(srs);
+      }
+
+      // merge meta (union the days used, so nothing gets lost either way)
+      if (payload.meta) {
+        const localDays = Array.isArray(meta.daysUsed) ? meta.daysUsed : (meta.lastStudyDate ? [meta.lastStudyDate] : []);
+        const importedDays = Array.isArray(payload.meta.daysUsed) ? payload.meta.daysUsed : (payload.meta.lastStudyDate ? [payload.meta.lastStudyDate] : []);
+        meta.daysUsed = Array.from(new Set([...localDays, ...importedDays])).sort();
+        meta.streak = meta.daysUsed.length;
+        if (meta.daysUsed.length) meta.lastStudyDate = meta.daysUsed[meta.daysUsed.length-1];
+        saveMeta(meta);
+      }
+
+      const res = document.getElementById('importResult');
+      res.style.display = 'block';
+      res.innerHTML = `<strong>✓ Import successful!</strong> ${vocabAdded} new vocab items, ${srsImported} SRS records merged.`;
+      updateNavBadge();
+      toast('Import done!');
+    } catch(err) {
+      const res = document.getElementById('importResult');
+      res.style.display = 'block';
+      res.textContent = '✗ Could not read file. Make sure it\'s a valid masri_backup.json';
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ============================================================
+// EXCEL IMPORT  (.xlsx with English / Arabic columns)
+// ============================================================
+let pendingExcelItems = [];
+
+function handleExcelFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      if (typeof XLSX === 'undefined') {
+        showExcelError('Excel library not loaded yet. Refresh the page and try again.');
+        return;
+      }
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      pendingExcelItems = parseExcelRows(rows);
+      if (!pendingExcelItems.length) {
+        showExcelError('No usable rows found. Make sure the sheet has two columns: English and Arabic.');
+        return;
+      }
+      openExcelCategoryPicker();
+    } catch (err) {
+      console.error(err);
+      showExcelError('Could not read the file. Make sure it\'s a valid .xlsx or .csv.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+}
+
+function parseExcelRows(rows) {
+  if (!rows || !rows.length) return [];
+  // Drop fully empty rows
+  rows = rows.filter(r => r && (String(r[0]||'').trim() || String(r[1]||'').trim() || String(r[2]||'').trim()));
+  if (!rows.length) return [];
+
+  // Decide which column is Arabic / English / Category by sniffing the data.
+  // Default: column 0 = English, column 1 = Arabic, column 2 = Category (if present).
+  let arCol = 1, enCol = 0, catCol = 2;
+  // Skip header row if it clearly names the columns
+  const first = rows[0].map(c => String(c).toLowerCase().trim());
+  const hasHeaderWords = first.some(c => c === 'english' || c === 'arabic' || c === 'category');
+  if (hasHeaderWords) {
+    const idxOf = (name) => first.indexOf(name);
+    if (idxOf('english') !== -1) enCol = idxOf('english');
+    if (idxOf('arabic') !== -1) arCol = idxOf('arabic');
+    catCol = idxOf('category'); // -1 if not present
+    rows = rows.slice(1);
+  } else {
+    // Heuristic: which of columns 0/1 has more Arabic-looking content?
+    const arabicScore = (col) => {
+      let s = 0;
+      rows.slice(0, 20).forEach(r => {
+        const v = String(r[col] || '');
+        if (/[؀-ۿ]/.test(v)) s += 2;
+        if (/[37qS27]/.test(v)) s += 1;  // common transliteration markers
+        if (/\b(ana|enta|enty|howwa|heyya|ye|ba|bet|el|essa3a)\b/i.test(v)) s += 1;
+      });
+      return s;
+    };
+    if (arabicScore(0) > arabicScore(1)) { arCol = 0; enCol = 1; }
+    // Only treat column 2 as category if it actually has data in a good chunk of rows
+    // and doesn't look like more Arabic/English content itself.
+    const catFillRatio = rows.slice(0, 30).filter(r => String(r[2] || '').trim()).length / Math.min(30, rows.length);
+    if (catFillRatio < 0.3) catCol = -1;
+  }
+
+  const out = [];
+  const seen = new Set();
+  rows.forEach(r => {
+    const ar = String(r[arCol] || '').trim();
+    const en = String(r[enCol] || '').trim();
+    if (!ar || !en) return;
+    const cat = (catCol >= 0) ? String(r[catCol] || '').trim() : '';
+    const key = ar.toLowerCase().replace(/\s+/g, '');
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ ar, en, cat });
+  });
+  return out;
+}
+
+function openExcelCategoryPicker() {
+  const box = document.getElementById('excelPickerArea');
+  const sel = document.getElementById('excelCatSelect');
+  const cats = Object.keys(db.categories).sort();
+  sel.innerHTML = cats.map(c => `<option value="${c.replace(/"/g, '&quot;')}">${c}</option>`).join('')
+    + '<option value="__new__">— New category —</option>';
+  // Default to first existing category
+  if (cats.length) sel.value = cats[0];
+  document.getElementById('excelNewCatName').style.display = 'none';
+  document.getElementById('excelNewCatName').value = '';
+
+  const withCat = pendingExcelItems.filter(i => i.cat);
+  const withoutCat = pendingExcelItems.filter(i => !i.cat);
+
+  document.getElementById('excelSummary').textContent =
+    `Found ${pendingExcelItems.length} vocab pairs.`;
+
+  // Breakdown of categories detected in the sheet itself
+  const breakdown = document.getElementById('excelCatBreakdown');
+  if (withCat.length) {
+    const counts = {};
+    withCat.forEach(i => { counts[i.cat] = (counts[i.cat] || 0) + 1; });
+    const lines = Object.keys(counts).sort().map(c => {
+      const tag = db.categories[c] ? 'existing' : 'new';
+      return `${escapeHtml(c)} — ${counts[c]} item${counts[c] === 1 ? '' : 's'} (${tag})`;
+    });
+    breakdown.innerHTML = '<strong>Categories from the sheet:</strong><br>' + lines.join('<br>');
+    breakdown.style.display = 'block';
+  } else {
+    breakdown.style.display = 'none';
+  }
+
+  // Fallback category picker only matters for rows with no category column value
+  const fallbackWrap = document.getElementById('excelFallbackCatWrap');
+  const fallbackLabel = document.getElementById('excelFallbackCatLabel');
+  if (withoutCat.length) {
+    fallbackWrap.style.display = 'block';
+    fallbackLabel.textContent = withCat.length
+      ? `Category for the ${withoutCat.length} item${withoutCat.length === 1 ? '' : 's'} without one`
+      : 'Category';
+  } else {
+    fallbackWrap.style.display = 'none';
+  }
+
+  document.getElementById('excelConfirmBtn').textContent = withCat.length ? 'Import all' : 'Add to category';
+
+  const prev = document.getElementById('excelPreview');
+  prev.innerHTML = '<strong>Preview:</strong><br>' +
+    pendingExcelItems.slice(0, 8).map(i =>
+      `<span style="color:var(--ink)">${escapeHtml(i.ar)}</span> &nbsp;= &nbsp;${escapeHtml(i.en)}${i.cat ? ` &nbsp;<em>[${escapeHtml(i.cat)}]</em>` : ''}`
+    ).join('<br>') +
+    (pendingExcelItems.length > 8 ? `<br><em>… and ${pendingExcelItems.length - 8} more</em>` : '');
+  box.style.display = 'block';
+  document.getElementById('excelResult').style.display = 'none';
+}
+
+function onExcelCatChange() {
+  const sel = document.getElementById('excelCatSelect');
+  const input = document.getElementById('excelNewCatName');
+  input.style.display = (sel.value === '__new__') ? 'block' : 'none';
+  if (sel.value === '__new__') input.focus();
+}
+
+function confirmExcelImport() {
+  if (!pendingExcelItems.length) { toast('Nothing to import'); return; }
+
+  const withoutCat = pendingExcelItems.filter(i => !i.cat);
+  let fallbackCat = null;
+  if (withoutCat.length) {
+    const sel = document.getElementById('excelCatSelect');
+    fallbackCat = sel.value;
+    if (fallbackCat === '__new__') {
+      fallbackCat = document.getElementById('excelNewCatName').value.trim();
+      if (!fallbackCat) { toast('Type a category name first'); return; }
+    }
+  }
+
+  // Group items by their target category: own category from the sheet, or the fallback.
+  const groups = {};
+  pendingExcelItems.forEach(item => {
+    const cat = item.cat || fallbackCat;
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(item);
+  });
+
+  let totalAdded = 0, totalDupes = 0;
+  const perCat = [];
+  Object.keys(groups).forEach(cat => {
+    if (!db.categories[cat]) db.categories[cat] = [];
+    const before = db.categories[cat].length;
+    add(db, cat, groups[cat].map(i => ({ ar: i.ar, en: i.en })));
+    const added = db.categories[cat].length - before;
+    const dupes = groups[cat].length - added;
+    totalAdded += added;
+    totalDupes += dupes;
+    perCat.push(`${escapeHtml(cat)}: +${added}${dupes > 0 ? ` (${dupes} dupes skipped)` : ''}`);
+  });
+  saveDB(db);
+
+  const res = document.getElementById('excelResult');
+  res.style.display = 'block';
+  res.innerHTML = `<strong>✓ Added ${totalAdded} items</strong>${totalDupes > 0 ? ` (${totalDupes} duplicates skipped)` : ''} across ${perCat.length} categor${perCat.length === 1 ? 'y' : 'ies'}:<br>${perCat.join('<br>')}`;
+  document.getElementById('excelPickerArea').style.display = 'none';
+  pendingExcelItems = [];
+  updateNavBadge();
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
+  toast(`+${totalAdded} items added!`);
+}
+
+function cancelExcelImport() {
+  pendingExcelItems = [];
+  document.getElementById('excelPickerArea').style.display = 'none';
+}
+
+function showExcelError(msg) {
+  const res = document.getElementById('excelResult');
+  res.style.display = 'block';
+  res.textContent = '⚠ ' + msg;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+// ============================================================
+// MOVE VOCAB ITEM TO ANOTHER CATEGORY
+// ============================================================
+function moveVocabAt(fromCat, index) {
+  const items = db.categories[fromCat];
+  if (!items || index < 0 || index >= items.length) return;
+  const item = items[index];
+
+  const cats = Object.keys(db.categories).filter(c => c !== fromCat).sort();
+  const numbered = cats.map((c, i) => `${i + 1}. ${c}`).join('\n');
+  const choice = prompt(
+    `Move "${item.ar}" → "${item.en}" to which category?\n\n` +
+    numbered +
+    `\n\nEnter a number, or type a new category name:`
+  );
+  if (choice === null) return;
+  const trimmed = choice.trim();
+  if (!trimmed) { toast('Cancelled'); return; }
+
+  let target;
+  if (/^\d+$/.test(trimmed)) {
+    const idx = parseInt(trimmed, 10) - 1;
+    if (idx < 0 || idx >= cats.length) { toast('Invalid number'); return; }
+    target = cats[idx];
+  } else {
+    target = trimmed;
+  }
+  if (target === fromCat) { toast('Already in that category'); return; }
+
+  // Add to target (dedup-aware), remove from source
+  if (!db.categories[target]) db.categories[target] = [];
+  const existingKeys = new Set(db.categories[target].map(i => norm(i.ar)));
+  if (!existingKeys.has(norm(item.ar))) {
+    db.categories[target].push(item);
+  }
+  items.splice(index, 1);
+  // If source category is empty AND not a built-in seed, remove it
+  if (items.length === 0) {
+    delete db.categories[fromCat];
+  }
+  saveDB(db);
+  toast(`Moved to "${target}"`);
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
+}
+
+// ============================================================
+// CLEAN UP "My Lessons"  — one-time migration
+// ============================================================
+// Heuristic-driven: verb infinitives → Verbs, conjugations → Verb Conjugations,
+// long sentences/dialogue → Phrases (new), single words → Other.
+// Duplicates that already exist elsewhere are dropped.
+function cleanupMyLessons() {
+  const src = db.categories['My Lessons'];
+  if (!src || !src.length) {
+    const res = document.getElementById('cleanupResult');
+    res.style.display = 'block';
+    res.textContent = 'Nothing to clean — &ldquo;My Lessons&rdquo; is empty.';
+    return;
+  }
+  if (!confirm(`Re-organize ${src.length} items currently in "My Lessons"?\n\nVerbs, conjugations, phrases and leftovers will each be moved to their proper category. Duplicates of items that already exist elsewhere will be discarded.`)) return;
+
+  // Build a quick set of all known Arabic strings across other categories so we don't duplicate
+  const knownAr = new Set();
+  Object.entries(db.categories).forEach(([cat, items]) => {
+    if (cat === 'My Lessons') return;
+    items.forEach(i => knownAr.add(norm(i.ar)));
+  });
+
+  // Map of infinitive (lowercase, stripped) -> { en, verb, verbEn } for conjugation linkage
+  const verbsCat = db.categories['Verbs'] || [];
+  const verbIndex = {};
+  verbsCat.forEach(v => { verbIndex[norm(v.ar)] = v; });
+
+  let moved = { 'Verbs': 0, 'Verb Conjugations': 0, 'Phrases': 0, 'Other': 0 };
+  let dropped = 0;
+
+  const ensureCat = (c) => { if (!db.categories[c]) db.categories[c] = []; };
+
+  src.forEach(item => {
+    let ar = (item.ar || '').trim();
+    let en = (item.en || '').trim();
+    if (!ar && !en) { dropped++; return; }
+
+    // --- 1. Drop pure junk (very short / single-character / non-meaningful) ---
+    if (ar.length <= 2 && !/[؀-ۿ]/.test(ar)) { dropped++; return; }
+    if (/^[^\w؀-ۿ]+$/.test(ar)) { dropped++; return; }
+
+    // --- 2. Already known elsewhere? drop ---
+    if (knownAr.has(norm(ar))) { dropped++; return; }
+
+    // --- 3. Verb infinitive?  starts with "Ye/Yo/Ya/Yet/yeT" + en starts with "to " ---
+    const looksInfinitive = /^Y[a-zA-Z]/.test(ar) && /\bto\s/i.test(en);
+    if (looksInfinitive) {
+      ensureCat('Verbs');
+      const cleanEn = en.replace(/^.*?\bto\s/i, 'to ').trim();
+      db.categories['Verbs'].push({ ar: ar, en: cleanEn });
+      knownAr.add(norm(ar));
+      moved['Verbs']++;
+      return;
+    }
+    // Reverse: en starts with verb-like Y* and ar is "to X"
+    const reverseInfinitive = /^Y[a-zA-Z]/.test(en) && /\bto\s/i.test(ar);
+    if (reverseInfinitive) {
+      ensureCat('Verbs');
+      db.categories['Verbs'].push({ ar: en, en: ar.replace(/^.*?\bto\s/i, 'to ').trim() });
+      knownAr.add(norm(en));
+      moved['Verbs']++;
+      return;
+    }
+
+    // --- 4. Verb conjugation?  starts with Ana/Enta/Enty/Howwa/Heyya + a "be-" verb ---
+    const conjMatch = ar.match(/^(Ana|Enta|Enty|Howwa|Heyya|E7na|Entom|Homma)\s+(b\S+)/i);
+    if (conjMatch) {
+      // Try to find which infinitive this comes from
+      const stem = conjMatch[2].toLowerCase()
+        .replace(/^be?t?y?/i, '')   // strip be-/bet-/bey-/bay- prefix
+        .replace(/y$/i, '');         // strip feminine -y suffix
+      const matchedVerb = verbsCat.find(v => {
+        const root = v.ar.replace(/^Y[eoa]?/i, '').toLowerCase();
+        return root && stem.includes(root.slice(0, Math.max(3, root.length - 1)));
+      });
+      ensureCat('Verb Conjugations');
+      const entry = { ar, en };
+      if (matchedVerb) { entry.verb = matchedVerb.ar; entry.verbEn = matchedVerb.en; }
+      db.categories['Verb Conjugations'].push(entry);
+      knownAr.add(norm(ar));
+      moved['Verb Conjugations']++;
+      return;
+    }
+
+    // --- 5. Long sentence / phrase → Phrases ---
+    const wordCount = ar.split(/\s+/).length;
+    const hasPunct = /[?.,!]/.test(ar);
+    if (wordCount >= 3 || hasPunct) {
+      ensureCat('Phrases');
+      db.categories['Phrases'].push({ ar, en });
+      knownAr.add(norm(ar));
+      moved['Phrases']++;
+      return;
+    }
+
+    // --- 6. Everything else → Other ---
+    ensureCat('Other');
+    db.categories['Other'].push({ ar, en });
+    knownAr.add(norm(ar));
+    moved['Other']++;
+  });
+
+  // Empty + remove the My Lessons category
+  delete db.categories['My Lessons'];
+  saveDB(db);
+
+  const res = document.getElementById('cleanupResult');
+  res.style.display = 'block';
+  res.innerHTML =
+    `<strong>✓ Cleanup done.</strong><br>` +
+    Object.entries(moved).filter(([_, n]) => n > 0).map(([k, n]) => `&nbsp;&nbsp;${n} → <strong>${k}</strong>`).join('<br>') +
+    (dropped > 0 ? `<br>&nbsp;&nbsp;${dropped} dropped (junk / already-known duplicates)` : '') +
+    `<br>The &ldquo;My Lessons&rdquo; category has been removed.`;
+  updateNavBadge();
+  renderCleanupVisibility();
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
+  toast('My Lessons cleaned up');
+}
+
+// Show the cleanup box only when My Lessons exists
+function renderCleanupVisibility() {
+  const box = document.getElementById('cleanupBox');
+  if (!box) return;
+  box.style.display = (db.categories['My Lessons'] && db.categories['My Lessons'].length) ? 'block' : 'none';
+}
+
+// ============================================================
+// BROWSE
+// ============================================================
+function renderBrowse() {
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = '';
+  let totalW=0, totalV=0, totalP=0;
+
+  const catOrder = Object.entries(db.categories).sort((a,b) => {
+    const pri = (k) => k === 'Verbs' ? 0 : k === 'Verb Conjugations' ? 1 : 2;
+    if (pri(a[0]) !== pri(b[0])) return pri(a[0]) - pri(b[0]);
+    return a[0].localeCompare(b[0]);
+  });
+  catOrder.forEach(([cat, rawItems]) => {
+    // Tag each item with its real index in db.categories[cat] *before* any
+    // display sorting, so edit/move/delete always act on the right word even
+    // though the sort below only reorders what's shown on screen.
+    let items = rawItems.map((it, idx) => ({ ...it, _origIdx: idx }));
+    if (cat === 'Numbers') {
+      // Sort numerically (0,1,2...100,125,1919), not alphabetically.
+      // Ordinal words (first, second...) have no digit value, so they sort to the end.
+      items = items.sort((x, y) => {
+        const nx = /^\d+$/.test(x.en) ? parseInt(x.en, 10) : Infinity;
+        const ny = /^\d+$/.test(y.en) ? parseInt(y.en, 10) : Infinity;
+        return nx - ny;
+      });
+    } else if (cat === 'Maps') {
+      // Keep insertion order so merged sub-groups (Directions, Address, Travel...)
+      // stay together as blocks instead of getting shuffled alphabetically.
+    } else {
+      items = items.sort((x, y) => (x.ar || '').localeCompare(y.ar || ''));
+    }
+    const card = document.createElement('div');
+    card.className = 'category-card';
+
+    const colorMap = {
+      'Verbs':'#B84A2C','Numbers':'#C8952A','Greetings & Basics':'#1A3A4A',
+      'Weather':'#4A6741','Food & Shopping':'#7A4A1A','Classroom':'#2A4A6A',
+      'Career & Work':'#5A3A6A','Adjectives & Descriptive Words':'#6A2A3A',
+      'Other':'#4A4A4A',
+    };
+    const color = colorMap[cat] || '#5A5A4A';
+
+    card.innerHTML = `
+      <div class="cat-header" style="border-left-color:${color}" onclick="toggleCat(this)">
+        <span class="cat-title">${cat}</span>
+        <span class="cat-count">${items.length}</span>
+      </div>
+      <div class="cat-items">
+        ${(() => {
+          const hasVerbGroups = items.some(i => i.verb);
+          if (hasVerbGroups) {
+            const groups = {};
+            items.forEach((i) => {
+              const v = i.verb || '(other)';
+              if (!groups[v]) groups[v] = { items: [], verbEn: i.verbEn || '' };
+              groups[v].items.push(i); // already carries the real _origIdx from above
+            });
+            return Object.entries(groups).map(([verb, g]) => `
+              <div class="verb-group">
+                <div class="verb-group-header" onclick="this.parentElement.classList.toggle('open')">
+                  <span class="verb-infinitive">${verb}</span>
+                  <span class="verb-english">${g.verbEn}</span>
+                  <span class="verb-toggle">▾</span>
+                </div>
+                <div class="verb-conjugations">
+                  ${g.items.map(i => `<div class="vocab-row">
+                    <span class="vocab-arabic">${i.ar}</span>
+                    <span class="vocab-english">${i.en}</span>
+                    <button class="vocab-edit" onclick="event.stopPropagation(); editVocabAt('${cat.replace(/'/g, "\\'")}', ${i._origIdx})" title="Edit">✎</button>
+                    <button class="vocab-move" onclick="event.stopPropagation(); moveVocabAt('${cat.replace(/'/g, "\\'")}', ${i._origIdx})" title="Move to another category">↪</button>
+            <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${i._origIdx})" title="Remove">×</button>
+                  </div>`).join('')}
+                </div>
+              </div>
+            `).join('');
+          }
+          return items.map((i) => `<div class="vocab-row">
+            <span class="vocab-arabic">${i.ar}</span>
+            <span class="vocab-english">${i.en}</span>
+            <button class="vocab-edit" onclick="event.stopPropagation(); editVocabAt('${cat.replace(/'/g, "\\'")}', ${i._origIdx})" title="Edit">✎</button>
+            <button class="vocab-move" onclick="event.stopPropagation(); moveVocabAt('${cat.replace(/'/g, "\\'")}', ${i._origIdx})" title="Move to another category">↪</button>
+            <button class="vocab-delete" onclick="event.stopPropagation(); deleteVocabAt('${cat.replace(/'/g, "\\'")}', ${i._origIdx})" title="Remove this word">×</button>
+          </div>`).join('');
+        })()}
+      </div>`;
+    grid.appendChild(card);
+
+    if (cat==='Verbs') totalV+=items.length;
+    else if (['Greetings & Basics','Introductions','Useful Phrases'].includes(cat)) totalP+=items.length;
+    else totalW+=items.length;
+  });
+
+  document.getElementById('totalWords').textContent = totalW;
+  document.getElementById('totalVerbs').textContent = totalV;
+  document.getElementById('totalPhrases').textContent = totalP;
+}
+
+function toggleCat(header) {
+  const items = header.nextElementSibling;
+  items.classList.toggle('open');
+}
+
+// ============================================================
+// UPLOAD / PARSE
+// ============================================================
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ============================================================
+// DELETE VOCAB
+// ============================================================
+function deleteVocabAt(cat, index, fromWeak) {
+  const items = db.categories[cat];
+  if (!items || index < 0 || index >= items.length) return;
+  const item = items[index];
+  if (!confirm(`Delete "${item.ar}" → "${item.en}"?\n\nThis cannot be undone (use Export/Import for backup).`)) return;
+
+  const key = srsKey(item);
+  items.splice(index, 1);
+
+  // If no remaining vocab entry uses this Arabic, also drop its SRS record
+  const stillUsed = Object.values(db.categories).flat().some(i => srsKey(i) === key);
+  if (!stillUsed && srs[key]) {
+    delete srs[key];
+    saveSRS(srs);
+  }
+
+  // If category is now empty, remove it
+  if (items.length === 0) {
+    delete db.categories[cat];
+  }
+
+  saveDB(db);
+  toast(`Removed: ${item.ar}`);
+
+  // Re-render whatever view they're on
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
+  if (currentTab === 'review') {
+    // Rebuild queue in case the deleted card was in it
+    srsDueQueue = srsDueQueue.filter(q => srsKey(q) !== key);
+    renderSRSStats();
+    renderSRSCard();
+    renderWeakWords();
+  }
+  updateNavBadge();
+}
+
+// Helper to find the index of a vocab item across categories (for weak-list deletes)
+function findVocabIndex(arabic, english) {
+  for (const [cat, items] of Object.entries(db.categories)) {
+    const idx = items.findIndex(i => i.ar === arabic && i.en === english);
+    if (idx !== -1) return { cat, index: idx };
+  }
+  return null;
+}
+
+function deleteVocabByValue(arabic, english) {
+  const loc = findVocabIndex(arabic, english);
+  if (loc) deleteVocabAt(loc.cat, loc.index, true);
+}
+
+function editVocabAt(cat, index) {
+  const items = db.categories[cat];
+  if (!items || index < 0 || index >= items.length) return;
+  const item = items[index];
+  const oldKey = srsKey(item);
+
+  const newAr = prompt('Edit the front (Arabic/Spanish):', item.ar);
+  if (newAr === null) return; // cancelled
+  const newArTrim = newAr.trim();
+  if (!newArTrim) { toast('Front cannot be empty'); return; }
+
+  const newEn = prompt('Edit the back (English):', item.en);
+  if (newEn === null) return; // cancelled
+  const newEnTrim = newEn.trim();
+  if (!newEnTrim) { toast('Back cannot be empty'); return; }
+
+  // No change? bail.
+  if (newArTrim === item.ar && newEnTrim === item.en) {
+    toast('No changes');
+    return;
+  }
+
+  // Update the item in place
+  item.ar = newArTrim;
+  item.en = newEnTrim;
+
+  // If srsKey changed, migrate SRS record
+  const newKey = srsKey(item);
+  if (newKey !== oldKey && srs[oldKey]) {
+    // Check for conflict: an SRS record for newKey may already exist (e.g., duplicate vocab)
+    if (srs[newKey]) {
+      // Keep the one with more reviews
+      if ((srs[oldKey].totalReviews || 0) > (srs[newKey].totalReviews || 0)) {
+        srs[newKey] = srs[oldKey];
+      }
+      // else keep existing srs[newKey]
+    } else {
+      srs[newKey] = srs[oldKey];
+    }
+    delete srs[oldKey];
+    saveSRS(srs);
+  }
+
+  saveDB(db);
+  toast('Card updated');
+
+  // Re-render
+  renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
+  if (currentTab === 'review') {
+    renderSRSStats();
+    renderSRSCard();
+    renderWeakWords();
+  }
+}
+
+function editCurrentSRSCard() {
+  if (!srsDueQueue.length || srsCurrentIndex >= srsDueQueue.length) return;
+  const item = srsDueQueue[srsCurrentIndex];
+  const loc = findVocabIndex(item.ar, item.en);
+  if (!loc) { toast('Could not find this card in vocab.'); return; }
+  editVocabAt(loc.cat, loc.index);
+  // Refresh the cached item in the queue so render reflects the edit
+  const updated = db.categories[loc.cat] && db.categories[loc.cat][loc.index];
+  if (updated) srsDueQueue[srsCurrentIndex] = updated;
+  renderSRSCard();
+}
+
+
+
+function deleteCurrentSRSCard() {
+  if (!srsDueQueue.length || srsCurrentIndex >= srsDueQueue.length) return;
+  const item = srsDueQueue[srsCurrentIndex];
+  const loc = findVocabIndex(item.ar, item.en);
+  if (!loc) {
+    toast('Could not find this card in vocab.');
+    return;
+  }
+  deleteVocabAt(loc.cat, loc.index);
+}
+
+
+// ============================================================
+// INIT
+// ============================================================
+renderBrowse();
+renderCleanupVisibility();
+updateNavBadge();
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener('keydown', e => {
+  // Don't fire when typing in inputs/textareas
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+
+  // REVIEW tab — q/w/o/p = again/hard/good/easy, space = flip, z = undo
+  if (currentTab === 'review') {
+    const ratings = { q: 0, w: 1, o: 2, p: 3 };
+    if (e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      const inner = document.getElementById('srsCardInner');
+      if (inner && !inner.classList.contains('flipped')) srsFlipCard();
+    } else if (e.key === 'z' || e.key === 'Z') {
+      undoSRS();
+    } else if (ratings[e.key] !== undefined) {
+      const btns = document.getElementById('srsRatingBtns');
+      if (btns && btns.style.display !== 'none') {
+        const btnMap = { q: 0, w: 1, o: 2, p: 3 };
+        const btn = btns.querySelectorAll('.rate-btn')[btnMap[e.key]];
+        if (btn) { btn.style.transform = 'scale(0.92)'; setTimeout(() => btn.style.transform = '', 120); }
+        rateSRS(ratings[e.key]);
+      }
+    }
+  }
+});
+
+
+
+// ============================================================
+// FIREBASE CLOUD SYNC
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyBPHgWLSaG0cU6aCGI0OYi2xghNRsdbAjM",
+  authDomain: "arabic-app-e3048.firebaseapp.com",
+  projectId: "arabic-app-e3048",
+  storageBucket: "arabic-app-e3048.firebasestorage.app",
+  messagingSenderId: "935442318047",
+  appId: "1:935442318047:web:48893e78333f47c63e1f6a"
+};
+
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const fbStore = firebase.firestore();
+
+const CLOUD_DOC_PATH = 'userdata/main';
+const LAST_MODIFIED_KEY = 'masri_last_modified';
+
+var cloudReady = false;
+var cloudDocRef = null;
+var syncTimer = null;
+var isSyncing = false;
+
+function setSyncStatus(status, msg) {
+  const el = document.getElementById('syncStatus');
+  const txt = document.getElementById('syncStatusText');
+  if (!el) return;
+  el.classList.remove('synced', 'syncing', 'offline', 'error');
+  el.classList.add(status);
+  const labels = { synced: 'synced', syncing: 'syncing', offline: 'offline', error: 'sync error' };
+  txt.textContent = msg || labels[status] || status;
+  el.title = msg || labels[status] || status;
+}
+
+async function initCloud() {
+  setSyncStatus('syncing', 'connecting');
+  try {
+    await fbAuth.signInAnonymously();
+    cloudDocRef = fbStore.doc(CLOUD_DOC_PATH);
+
+    const snap = await cloudDocRef.get();
+    const localTime = parseInt(localStorage.getItem(LAST_MODIFIED_KEY) || '0');
+
+    if (snap.exists) {
+      const data = snap.data();
+      // Compare clientTime (recorded on the same Date.now() clock as
+      // localTime) instead of the Firestore server timestamp. The server
+      // timestamp is stamped when the write commits, which is always a
+      // little AFTER the client's pre-write Date.now() — so comparing it to
+      // localTime made this device's own just-written data look "stale" on
+      // the very next load, reverting a same-day update before it stuck.
+      const cloudTime = data.clientTime || (data.lastModified ? data.lastModified.toMillis() : 0);
+
+      if (cloudTime > localTime) {
+        // Cloud has newer data — adopt it
+        let changed = false;
+        if (data.vocab && data.vocab.categories) {
+          db = data.vocab;
+          saveDBLocal(db);
+          changed = true;
+        }
+        if (data.srs) {
+          srs = data.srs;
+          saveSRSLocal(srs);
+          changed = true;
+        }
+        if (data.meta) {
+          // Merge, don't overwrite: union the days-used sets so a day just
+          // recorded on this device right before this sync landed survives
+          // even if the cloud copy hasn't caught up to it yet.
+          const localDays = Array.isArray(meta.daysUsed) ? meta.daysUsed : (meta.lastStudyDate ? [meta.lastStudyDate] : []);
+          const cloudDays = Array.isArray(data.meta.daysUsed) ? data.meta.daysUsed : (data.meta.lastStudyDate ? [data.meta.lastStudyDate] : []);
+          const mergedDays = Array.from(new Set([...localDays, ...cloudDays])).sort();
+          meta = Object.assign({}, data.meta, {
+            daysUsed: mergedDays,
+            streak: mergedDays.length,
+            lastStudyDate: mergedDays.length ? mergedDays[mergedDays.length-1] : null,
+          });
+          saveMetaLocal(meta);
+          changed = true;
+        }
+        localStorage.setItem(LAST_MODIFIED_KEY, cloudTime.toString());
+
+        // Re-merge built-in vocab from this HTML version (in case new vocab was added).
+        // Clear the version marker first so initDB() doesn't skip the merge just
+        // because this browser already ran it once earlier in the same page load
+        // (the cloud data we just adopted may be from an older, unmerged version).
+        // add() only adds missing items, so this never touches SRS progress or
+        // anything the person added themselves.
+        const beforeCount = Object.values(db.categories || {}).flat().length;
+        localStorage.removeItem(VOCAB_VERSION_KEY);
+        db = initDB();
+        const afterCount = Object.values(db.categories || {}).flat().length;
+        const newAdded = afterCount - beforeCount;
+        const vocabChanged = newAdded !== 0;
+        if (vocabChanged) {
+          console.log(`[cloud] Vocab reseeded from updated HTML: ${beforeCount} -> ${afterCount} item(s).`);
+          // Force a push so other devices (and the cloud copy itself) get the
+          // updated count — this also covers a full replacement, where the new
+          // count is smaller than before, not just additions.
+          localStorage.setItem(LAST_MODIFIED_KEY, Date.now().toString());
+        }
+
+        if (changed || vocabChanged) {
+          // Re-render whichever tab is active
+          if (currentTab === 'review') initReview(srsUnlimited);
+          renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
+          updateNavBadge();
+        }
+
+        // Push the reseeded result back to cloud so all devices — and the
+        // cloud document itself — reflect the updated vocab, whether it grew
+        // or shrank.
+        if (vocabChanged) {
+          cloudReady = true;
+          await doCloudSync();
+        }
+      } else if (cloudTime < localTime || cloudTime === 0) {
+        // Local is newer — push it up
+        cloudReady = true;
+        await doCloudSync();
+      }
+    } else {
+      // No cloud doc yet — push local up to seed it
+      cloudReady = true;
+      await doCloudSync();
+    }
+
+    cloudReady = true;
+    setSyncStatus('synced');
+  } catch (err) {
+    console.error('Cloud init failed:', err);
+    setSyncStatus('error', 'offline');
+    // App still works from localStorage cache
+  }
+}
+
+function queueCloudSync() {
+  if (typeof cloudReady === 'undefined' || !cloudReady) return;
+  setSyncStatus('syncing');
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(doCloudSync, 1200);
+}
+
+async function doCloudSync() {
+  if (!cloudDocRef) return;
+  if (isSyncing) {
+    // Will retry on next change
+    return;
+  }
+  isSyncing = true;
+  try {
+    const now = Date.now();
+    await cloudDocRef.set({
+      vocab: db,
+      srs: srs,
+      meta: meta,
+      lastModified: firebase.firestore.FieldValue.serverTimestamp(),
+      clientTime: now,
+    });
+    localStorage.setItem(LAST_MODIFIED_KEY, now.toString());
+    setSyncStatus('synced');
+  } catch (err) {
+    console.error('Cloud sync failed:', err);
+    setSyncStatus('error');
+    // Retry in 5 sec
+    setTimeout(() => { if (cloudReady) queueCloudSync(); }, 5000);
+  } finally {
+    isSyncing = false;
+  }
+}
+
+// Network status awareness
+window.addEventListener('online', () => {
+  if (cloudReady) {
+    setSyncStatus('syncing', 'reconnecting');
+    queueCloudSync();
+  } else {
+    initCloud();
+  }
+});
+window.addEventListener('offline', () => {
+  setSyncStatus('offline');
+});
+
+// Kick off cloud sync
+initCloud();
+
+</script>
+</body>
+</html>
