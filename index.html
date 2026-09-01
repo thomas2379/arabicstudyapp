@@ -1972,19 +1972,35 @@ function renderSRSStats() {
   updateNavBadge();
 }
 
+function getActivePoolItems() {
+  // Mirrors getDuePool's own category resolution: the chip filter
+  // (srsCatFilter) takes priority whenever it's active, exactly like the
+  // function that actually builds the review queue does. Using srsCategory
+  // here (as this used to) ignored an active chip filter and reported the
+  // unseen count for your whole vocab instead of the category you'd
+  // actually selected.
+  if (typeof srsCatFilter !== 'undefined' && srsCatFilter.mode !== 'all') {
+    return Object.entries(db.categories)
+      .filter(([cat]) => filterMatchesCategory(cat))
+      .flatMap(([, items]) => items);
+  }
+  return srsCategory === 'All' ? Object.values(db.categories).flat() : (db.categories[srsCategory] || []);
+}
+
 function renderSRSCard() {
   const area = document.getElementById('srsCardArea');
 
   if (!srsDueQueue.length) {
-    const pool = srsCategory === 'All' ? Object.values(db.categories).flat() : (db.categories[srsCategory] || []);
+    const pool = getActivePoolItems();
     const newRemaining = pool.filter(i => !srs[srsKey(i)]).length;
     const newSeenToday = getNewSeenTodayCount();
     const totalStillDue = getTotalDueCount(srsCategory);
-    const catLabel = srsCategory === 'All' ? '' : ` in <strong>${srsCategory}</strong>`;
+    const activeCatName = srsCatFilter.mode === 'only' && srsCatFilter.cats.length === 1 ? srsCatFilter.cats[0] : null;
+    const catLabel = activeCatName ? ` in <strong>${activeCatName}</strong>` : (srsCategory === 'All' ? '' : ` in <strong>${srsCategory}</strong>`);
     area.innerHTML = `
       <div class="srs-empty">
         <div class="srs-empty-icon">✓</div>
-        <div class="srs-empty-title">All caught up${srsCategory !== 'All' ? ' — ' + srsCategory : ' for today'}!</div>
+        <div class="srs-empty-title">All caught up${activeCatName ? ' — ' + activeCatName : (srsCategory !== 'All' ? ' — ' + srsCategory : ' for today')}!</div>
         <div class="srs-empty-sub">No cards due right now${catLabel}.<br>
         ${newSeenToday > 0 ? `<span style="color:var(--gold);font-size:0.8rem;margin-top:0.5rem;display:block">${newSeenToday} new cards introduced today</span>` : ''}
         ${newRemaining > 0 ? `<span style="color:var(--mist);font-size:0.75rem;display:block;margin-top:0.3rem">${newRemaining} unseen cards remaining</span>` : ''}
@@ -1998,7 +2014,7 @@ function renderSRSCard() {
   if (srsCurrentIndex >= srsDueQueue.length) {
     const remaining = getDueItems(false, srsCategory).length; // in current capped batch
     const totalStillDue = getTotalDueCount(srsCategory);
-    const pool = srsCategory === 'All' ? Object.values(db.categories).flat() : (db.categories[srsCategory] || []);
+    const pool = getActivePoolItems();
     const newRemaining = pool.filter(i => !srs[srsKey(i)]).length;
     area.innerHTML = `
       <div class="srs-empty">
