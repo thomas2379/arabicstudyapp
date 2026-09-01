@@ -749,7 +749,7 @@
       </div>
       <div class="srs-stat">
         <span class="srs-stat-num srs-streak" id="srsStreak">0</span>
-        <span class="srs-stat-label">Day streak</span>
+        <span class="srs-stat-label">Days studied</span>
       </div>
       <div class="srs-stat">
         <span class="srs-stat-num srs-mastered" id="srsMastered">0</span>
@@ -891,8 +891,15 @@ function saveSRSLocal(srs) { localStorage.setItem(SRS_KEY, JSON.stringify(srs));
 function saveSRS(srs) { saveSRSLocal(srs); queueCloudSync(); }
 
 function loadMeta() {
-  try { const r = localStorage.getItem(META_KEY); if (r) return JSON.parse(r); } catch(e) {}
-  return { streak: 0, lastStudyDate: null };
+  try {
+    const r = localStorage.getItem(META_KEY);
+    if (r) {
+      const m = JSON.parse(r);
+      if (!Array.isArray(m.daysUsed)) m.daysUsed = m.lastStudyDate ? [m.lastStudyDate] : [];
+      return m;
+    }
+  } catch(e) {}
+  return { streak: 0, lastStudyDate: null, daysUsed: [] };
 }
 function saveMetaLocal(m) { localStorage.setItem(META_KEY, JSON.stringify(m)); }
 function saveMeta(m) { saveMetaLocal(m); queueCloudSync(); }
@@ -1584,7 +1591,10 @@ const LEARN_STEPS = [1, 6]; // first review after 1 day, then 6 days = Anki defa
 
 function srsKey(item) { return norm(item.ar); }
 
-function todayStr() { return new Date().toISOString().slice(0,10); }
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
 
 function getSRSCard(item) {
   const k = srsKey(item);
@@ -1791,16 +1801,12 @@ function getWeakItems() {
 
 function updateStreak() {
   const today = todayStr();
-  if (meta.lastStudyDate === today) return;
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate()-1);
-  const yStr = yesterday.toISOString().slice(0,10);
-  if (meta.lastStudyDate === yStr) {
-    meta.streak = (meta.streak||0) + 1;
-  } else {
-    meta.streak = 1;
-  }
+  if (!Array.isArray(meta.daysUsed)) meta.daysUsed = meta.lastStudyDate ? [meta.lastStudyDate] : [];
+  if (meta.daysUsed.includes(today)) return; // already counted today
+  meta.daysUsed.push(today);
+  meta.daysUsed.sort();
   meta.lastStudyDate = today;
+  meta.streak = meta.daysUsed.length; // total distinct days used, not a consecutive streak
   saveMeta(meta);
 }
 
@@ -2216,12 +2222,13 @@ function importData(event) {
         saveSRS(srs);
       }
 
-      // merge meta (keep higher streak)
+      // merge meta (union the days used, so nothing gets lost either way)
       if (payload.meta) {
-        meta.streak = Math.max(meta.streak||0, payload.meta.streak||0);
-        if (!meta.lastStudyDate || payload.meta.lastStudyDate > meta.lastStudyDate) {
-          meta.lastStudyDate = payload.meta.lastStudyDate;
-        }
+        const localDays = Array.isArray(meta.daysUsed) ? meta.daysUsed : (meta.lastStudyDate ? [meta.lastStudyDate] : []);
+        const importedDays = Array.isArray(payload.meta.daysUsed) ? payload.meta.daysUsed : (payload.meta.lastStudyDate ? [payload.meta.lastStudyDate] : []);
+        meta.daysUsed = Array.from(new Set([...localDays, ...importedDays])).sort();
+        meta.streak = meta.daysUsed.length;
+        if (meta.daysUsed.length) meta.lastStudyDate = meta.daysUsed[meta.daysUsed.length-1];
         saveMeta(meta);
       }
 
@@ -2957,7 +2964,13 @@ async function initCloud() {
 
     if (snap.exists) {
       const data = snap.data();
-      const cloudTime = data.lastModified ? data.lastModified.toMillis() : 0;
+      // Compare clientTime (recorded on the same Date.now() clock as
+      // localTime) instead of the Firestore server timestamp. The server
+      // timestamp is stamped when the write commits, which is always a
+      // little AFTER the client's pre-write Date.now() — so comparing it to
+      // localTime made this device's own just-written data look "stale" on
+      // the very next load, reverting a same-day update before it stuck.
+      const cloudTime = data.clientTime || (data.lastModified ? data.lastModified.toMillis() : 0);
 
       if (cloudTime > localTime) {
         // Cloud has newer data — adopt it
@@ -2973,7 +2986,17 @@ async function initCloud() {
           changed = true;
         }
         if (data.meta) {
-          meta = data.meta;
+          // Merge, don't overwrite: union the days-used sets so a day just
+          // recorded on this device right before this sync landed survives
+          // even if the cloud copy hasn't caught up to it yet.
+          const localDays = Array.isArray(meta.daysUsed) ? meta.daysUsed : (meta.lastStudyDate ? [meta.lastStudyDate] : []);
+          const cloudDays = Array.isArray(data.meta.daysUsed) ? data.meta.daysUsed : (data.meta.lastStudyDate ? [data.meta.lastStudyDate] : []);
+          const mergedDays = Array.from(new Set([...localDays, ...cloudDays])).sort();
+          meta = Object.assign({}, data.meta, {
+            daysUsed: mergedDays,
+            streak: mergedDays.length,
+            lastStudyDate: mergedDays.length ? mergedDays[mergedDays.length-1] : null,
+          });
           saveMetaLocal(meta);
           changed = true;
         }
@@ -3001,7 +3024,7 @@ async function initCloud() {
 
         if (changed || vocabChanged) {
           // Re-render whichever tab is active
-          if (currentTab === 'review') initReview();
+          if (currentTab === 'review') initReview(srsUnlimited);
           renderBrowse(); // keep header word/verb/phrase totals live even when this tab isn't the active one
           updateNavBadge();
         }
