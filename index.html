@@ -873,7 +873,8 @@ const DB_KEY = 'masri_vocab_v2';
 const SRS_KEY = 'masri_srs_v2';
 const META_KEY = 'masri_meta_v2';
 const VOCAB_VERSION_KEY = 'masri_vocab_version';
-const CURRENT_VOCAB_VERSION = 11; // v11: full vocab replacement from ARABIC_WORDS___ALPHABET.xlsx — wipes old categories and reseeds with a smaller, cleaned-up set. SRS history is untouched and re-links automatically for any word whose Arabic text is unchanged. // bump this each time vocab is updated
+const CURRENT_VOCAB_VERSION = 13; // v13: adds the newest rows from ARABIC_WORDS___ALPHABET.xlsx; reseeds now merge instead of wiping imported words.
+// (v11 note) // v11: full vocab replacement from ARABIC_WORDS___ALPHABET.xlsx — wipes old categories and reseeds with a smaller, cleaned-up set. SRS history is untouched and re-links automatically for any word whose Arabic text is unchanged. // bump this each time vocab is updated
 
 function loadDB() {
   try { const r = localStorage.getItem(DB_KEY); if (r) return JSON.parse(r); } catch(e) {}
@@ -917,9 +918,20 @@ function initDB() {
 
   const db = existing || { categories: {} };
 
-  // ---- FULL VOCAB REPLACEMENT (curated from ARABIC_WORDS___ALPHABET.xlsx) ----
-  // This replaces the entire previous seed with a smaller, cleaned-up set.
-  db.categories = {};
+  // Only the one-time v11 migration (or a fresh install) wipes old categories.
+  // Every later version bump just MERGES new seed words in, so words added via
+  // Excel import, backup import or paste are never thrown away.
+  if (!existing || isNaN(storedVersion) || storedVersion < 11) db.categories = {};
+  seedVocab(db);
+
+  saveDB(db);
+  localStorage.setItem(VOCAB_VERSION_KEY, CURRENT_VOCAB_VERSION);
+  return db;
+}
+
+// Built-in vocab (curated from ARABIC_WORDS___ALPHABET.xlsx). add() only adds
+// words that are missing, so running this on existing data is always safe.
+function seedVocab(db) {
 
   add(db, 'Numbers', [
     {ar:'Sefr', en:'0'},
@@ -1494,10 +1506,86 @@ function initDB() {
     {ar:'Henaak', en:'there'},
   ]);
 
+  // ---- v13 additions: the newest rows at the bottom of the Excel sheets ----
+  // (Words already in the app, like Yezoor, Teshrab eh?, etfaDDal/y and
+  // Ana ba-shrab / Enta bete-shrab / Enty bete-shraby, are not repeated.)
+  add(db, 'Weather', [
+    {ar:'Reyaa7', en:'wind'},
+    {ar:'Hawaa shedeed', en:'strong air (wind)'},
+  ]);
+  add(db, 'Useful Phrases', [
+    {ar:'MabsooT fi shoghlak?', en:'are you happy with your work? (m)'},
+    {ar:'Heyya mabsooTa fi shoghlaha?', en:'is she happy with her work?'},
+    {ar:'Aywa, heyya mabsooTa fi shoghlaha', en:'yes, she is happy with her work'},
+    {ar:'Abl keda', en:'before'},
+    {ar:'Kooret salla', en:'basketball'},
+    {ar:'Fa', en:'so'},
+    {ar:'Ma-konte-sh 3aayez al3ab aktar', en:'I didn\'t want to play more'},
+    {ar:'Delwa2ty bal3ab ma3 So7aabi', en:'now I play with my friends'},
+    {ar:'Enta saaken fi nafs el makaan?', en:'do you live in the same place?'},
+    {ar:'15 sana', en:'15 years'},
+    {ar:'Min sana w noSS eshtarait bait', en:'a year and a half ago I bought a house'},
+    {ar:'Kaan Sa3b', en:'it was difficult'},
+    {ar:'Enta ha-tzoorny?', en:'will you visit me?'},
+    {ar:'Motshakker/a', en:'thanks a lot (formal)'},
+    {ar:'El 3afw', en:'you\'re welcome'},
+    {ar:'Yareet', en:'yes, please (lit. I wish)'},
+    {ar:'Balaash gatoo, ana 3aamel diet', en:'no cake, I\'m on a diet'},
+  ]);
+  add(db, 'Verbs', [
+    {ar:'Eshtarait', en:'I bought'},
+  ]);
+  add(db, 'Verb Conjugations', [
+    {ar:'Beteshrab eh?', en:'what do you drink? (m)', verb:'Yeshrab', verbEn:'to drink'},
+    {ar:'Teshraby eh?', en:'what would you like to drink? (f)', verb:'Yeshrab', verbEn:'to drink'},
+  ]);
+  add(db, 'Adjectives & Descriptive Words', [
+    {ar:'Ta3baan/a', en:'tired'},
+    {ar:'Mot3eb/a', en:'tiring'},
+    {ar:'Sa3b', en:'difficult'},
+    {ar:'Sahl', en:'easy'},
+    {ar:'Sokhn/a', en:'hot (not the weather)'},
+  ]);
+  add(db, 'Career & Work', [
+    {ar:'7allaa2', en:'barber'},
+  ]);
+  add(db, 'Store & Shopping', [
+    {ar:'7aaga sa2a3a', en:'soft drinks'},
+    {ar:'3aSeer', en:'juice'},
+    {ar:'Kaika', en:'cake'},
+    {ar:'Gatto', en:'cake'},
+    {ar:'Torta', en:'birthday cake'},
+    {ar:'7etta', en:'a small piece'},
+    {ar:'Tamr', en:'dates'},
+    {ar:'Laban', en:'milk (Egypt)'},
+    {ar:'7aleeb', en:'milk (general)'},
+    {ar:'Ahwetak eh?', en:'how do you take your coffee?'},
+    {ar:'Saada', en:'plain (no sugar)'},
+    {ar:'3a ree7a', en:'a little sugar'},
+    {ar:'MaZboota', en:'medium sugar'},
+    {ar:'Sukkar zeyaada', en:'extra sugar'},
+  ]);
+  add(db, 'Maps', [
+    {ar:'Sharraft/y', en:'thanks for visiting'},
+    {ar:'Sha22etek', en:'your apartment'},
+    {ar:'Balaash gatto', en:'no gatto'},
+    {ar:'7ammam', en:'bathroom'},
+    {ar:'Momken el 7ammam?', en:'can I use the bathroom?'},
+  ]);
 
-  saveDB(db);
-  localStorage.setItem(VOCAB_VERSION_KEY, CURRENT_VOCAB_VERSION);
-  return db;
+  // Remove words the earlier v12 file added that are NOT in this list.
+  // Matches only these exact entries, so nothing else is touched.
+  const dropV12 = {
+    'Useful Phrases': ['Ana fahem','Ana 3aaref/3aarfa','Mish 3aaref','Settain','Aywa, momken','Keefak'],
+    'Verbs': ['baTbokh','Yezaaker'],
+    'Maps': ['El-gaam3a','Bait'],
+    'Store & Shopping': ['Nadara','Kaika / Gatto','Laban / 7aleeb'],
+  };
+  Object.entries(dropV12).forEach(([cat, list]) => {
+    if (!db.categories[cat]) return;
+    const kill = new Set(list.map(norm));
+    db.categories[cat] = db.categories[cat].filter(i => !kill.has(norm(i.ar)));
+  });
 }
 
 function add(db, cat, items) {
@@ -3024,8 +3112,9 @@ async function initCloud() {
         // add() only adds missing items, so this never touches SRS progress or
         // anything the person added themselves.
         const beforeCount = Object.values(db.categories || {}).flat().length;
-        localStorage.removeItem(VOCAB_VERSION_KEY);
-        db = initDB();
+        seedVocab(db);
+        saveDBLocal(db);
+        localStorage.setItem(VOCAB_VERSION_KEY, CURRENT_VOCAB_VERSION);
         const afterCount = Object.values(db.categories || {}).flat().length;
         const newAdded = afterCount - beforeCount;
         const vocabChanged = newAdded !== 0;
